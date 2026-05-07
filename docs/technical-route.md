@@ -26,7 +26,7 @@ Qwen3-TTS
 
 ## 推进计划
 
-1. 优先使用官方 release binary 跑通 Qwen3-TTS-Rust CLI；必要时再从源码构建。
+1. 优先使用官方 release binary 和 Docker Compose 跑通 Qwen3-TTS-Rust CLI；必要时再从源码构建。
 2. 验证 Vulkan backend 是否生效。
 3. 测试中文质量、TTFB、RTF、稳定性。
 4. 达标后封 HTTP API。

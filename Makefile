@@ -7,9 +7,9 @@ BACKEND ?= $(or $(QWEN3_TTS_BACKEND),vulkan)
 COMPOSE_CMD ?= docker compose
 IMAGE ?= $(or $(QWEN3_TTS_IMAGE),qwen3-tts-rust-stack:v0.1.6-vulkan)
 
-COMPOSE_FILES_cpu := -f docker-compose.yml
+COMPOSE_FILES_none := -f docker-compose.yml
 COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml
-SUPPORTED_BACKENDS := cpu vulkan
+SUPPORTED_BACKENDS := none vulkan
 ifeq ($(filter $(BACKEND),$(SUPPORTED_BACKENDS)),)
 $(error Unsupported BACKEND=$(BACKEND). Use one of: $(SUPPORTED_BACKENDS))
 endif
@@ -17,34 +17,19 @@ endif
 COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
 COMPOSE := QWEN3_TTS_IMAGE=$(IMAGE) $(COMPOSE_CMD) $(COMPOSE_FILES)
 
-.PHONY: check bootstrap build build-image build-image-source generate benchmark run down check-vulkan clean
+.PHONY: check build-image run down check-vulkan clean
 
 check:
 	@$(COMPOSE_CMD) version >/dev/null 2>&1 || (echo "Compose command failed: $(COMPOSE_CMD). Install Docker Compose plugin or run with COMPOSE_CMD=docker-compose" >&2; exit 2)
 	@case "$(BACKEND)" in \
-		cpu) echo "Backend cpu: no GPU device required" ;; \
+		none) echo "Backend none: no GPU device is passed through" ;; \
 		vulkan) [ -e /dev/dri ] || (echo "Missing /dev/dri for Vulkan backend" >&2; exit 2); echo "Backend vulkan: /dev/dri found" ;; \
 	esac
-
-bootstrap:
-	./scripts/bootstrap_upstream.sh
-
-build:
-	./scripts/build_cli.sh
 
 build-image:
 	docker build -f docker/Dockerfile -t $(IMAGE) .
 
-build-image-source:
-	docker build -f docker/Dockerfile.source -t qwen3-tts-rust-stack:source .
-
-generate:
-	./scripts/run_cli.sh "$(or $(QWEN3_TTS_INPUT),你好，我是本地语音合成服务。)" outputs/speech.wav
-
-benchmark:
-	./scripts/benchmark_cli.py --rounds 3
-
-run: check build-image
+run: check
 	$(COMPOSE) run --rm qwen3-tts
 
 down:
@@ -54,4 +39,4 @@ check-vulkan:
 	./scripts/verify_vulkan.sh
 
 clean:
-	rm -rf upstream target outputs/*
+	rm -rf outputs/*

@@ -20,37 +20,30 @@ Self-hosted Text-to-Speech stack. 当前阶段用于验证 **Qwen3-TTS + GGUF + 
 
 ## Quick start
 
+Requirements: Linux, Docker with Compose plugin.
+
 ```bash
 cp .env.example .env
-
-# 1) 拉取上游到 ./upstream，并固定到 upstream.lock 里的 commit
-./scripts/bootstrap_upstream.sh
-
-# 2) 编译 CLI（默认 release + vulkan feature）
-./scripts/build_cli.sh
-
-# 3) 生成一条中文测试音频
-./scripts/run_cli.sh "你好，我是本地语音合成服务。" outputs/hello.wav
-
-# 4) 连续基准测试，输出 RTF
-./scripts/benchmark_cli.py --rounds 3 --speaker vivian
+make build-image
+make run
 ```
 
-首次运行会自动下载模型、ONNX Runtime、llama.cpp runtime，耗时取决于网络。
+默认 `BACKEND=vulkan`，会把 `/dev/dri` 暴露给容器。没有 GPU passthrough 的开发机可用：
+
+```bash
+BACKEND=none make run
+```
+
+首次运行会自动下载模型，耗时取决于网络。生成结果默认写到 `outputs/speech.wav`。
 
 ## Docker 构建与运行
 
 默认 Dockerfile 使用官方 GitHub Release 二进制包，不在镜像内编译 Rust。当前固定版本见 [`release.lock`](./release.lock)：`v0.1.6` / `qwen3-tts-linux-x64-vulkan.tar.gz`。
 
 ```bash
-# 基于官方 release binary 构建镜像
-make build-image
-
-# 使用 Compose 执行一次合成任务；默认 BACKEND=vulkan
-make run
-
-# 无 GPU 开发机可显式使用 CPU compose 配置
-BACKEND=cpu make run
+make build-image   # 基于官方 release binary 构建镜像
+make run           # 使用 Compose 执行一次合成任务
+make down          # 清理 Compose 资源
 ```
 
 如果在 AMD GPU 主机上运行，建议确认宿主机可用：
@@ -100,7 +93,7 @@ Content-Type: application/json
 
 ## 重要说明
 
-- 默认 Docker 镜像使用官方 release asset；如需从源码构建，可执行 `make build-image-source`。
-- 开发机可能没有 GPU，因此本仓库脚本不强制完整推理必须成功。
+- 默认 Docker 镜像使用官方 release asset；如需从源码构建，可手动使用 `docker/Dockerfile.source`。
+- 开发机可能没有 GPU，因此可用 `BACKEND=none` 跳过 `/dev/dri` passthrough；性能仍需在目标 GPU 机器上确认。
 - 上游 README 声称 Linux/Windows 默认 Vulkan，macOS 默认 Metal；实际是否生效需在目标机器验证 runtime 日志和 RTF。
 - 上游当前也包含 `qwen3_tts_server`，但先不要把它视为最终服务 API；本轮先用 CLI 验证路线。
