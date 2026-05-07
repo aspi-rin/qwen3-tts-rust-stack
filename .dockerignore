@@ -1,0 +1,14 @@
+.git
+.gitignore
+.dockerignore
+.env
+upstream
+target
+models
+outputs
+*.wav
+*.pcm
+*.log
+__pycache__
+*.pyc
+*.pyo
