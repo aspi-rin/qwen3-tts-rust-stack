@@ -1,0 +1,14 @@
+/target/
+/upstream/
+/data/models/*
+/data/runtime/*
+/data/outputs/*
+!/data/models/.gitkeep
+!/data/runtime/.gitkeep
+!/data/outputs/.gitkeep
+*.wav
+*.pcm
+*.log
+
+__pycache__/
+*.py[cod]

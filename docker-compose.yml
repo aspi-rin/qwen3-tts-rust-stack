@@ -1,0 +1,30 @@
+services:
+  qwen3-tts-cli:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: qwen3-tts-rust-stack:local
+    volumes:
+      - ./data:/app/data
+    command:
+      - --model-dir=/app/data/models
+      - --quant=q5_k_m
+      - --speakers-dir=/app/speakers
+      - --speaker=vivian
+      - --text=你好，我是本地语音合成服务。
+      - --output=/app/data/outputs/docker-smoke.wav
+
+  qwen3-tts-vulkan:
+    image: qwen3-tts-rust-stack:local
+    profiles: ["gpu"]
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ./data:/app/data
+    command:
+      - --model-dir=/app/data/models
+      - --quant=q5_k_m
+      - --speakers-dir=/app/speakers
+      - --speaker=vivian
+      - --text=你好，我们正在测试 Vulkan 后端的实时语音合成性能。
+      - --output=/app/data/outputs/docker-vulkan.wav

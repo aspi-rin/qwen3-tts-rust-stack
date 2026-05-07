@@ -1,0 +1,5 @@
+# Pinned upstream used by this validation stack.
+repo=https://github.com/cgisky1980/Qwen3-TTS-Rust.git
+branch=main
+commit=32ed8f03c1ca9fbdcb3a888cb4006ca10ccfc74e
+observed_at=2026-05-07
