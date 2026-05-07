@@ -20,7 +20,7 @@
 Qwen3-TTS
 + GGUF
 + llama.cpp backend
-+ CPU / Vulkan / CUDA deployment targets
++ CPU / Vulkan deployment targets
 + Rust
 ```
 
@@ -46,6 +46,6 @@ Qwen3-TTS
 ## 风险
 
 - Vulkan 在容器内依赖宿主机 `/dev/dri`、ICD、驱动版本，需单独验证。
-- Docker 默认固定官方 release `v0.1.6`。该版本上游只发布 Linux Vulkan asset；CPU 暂时复用该 asset 无 GPU passthrough，CUDA 需后续补 Linux CUDA source-build image。后续升级需同步更新 `release.lock` 和 SHA256。
+- Docker 默认固定官方 release `v0.1.6`。该版本上游只发布 Linux Vulkan asset；CPU 模式复用该 asset 且不做 GPU passthrough，依赖 llama.cpp/ggml CPU fallback。后续升级需同步更新 `release.lock` 和 SHA256。
 - 上游首次运行自动下载模型，生产部署建议预热并固化缓存目录。
 - CLI RTF 不等同服务端 TTFB；封 API 后需要单独测首包延迟和并发行为。

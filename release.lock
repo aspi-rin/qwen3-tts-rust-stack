@@ -1,10 +1,9 @@
 # Pinned upstream release assets used by docker/Dockerfile.
 repo=https://github.com/cgisky1980/Qwen3-TTS-Rust
 release_tag=v0.1.6
-linux_cpu_asset=qwen3-tts-linux-x64-vulkan.tar.gz # upstream has no separate Linux CPU asset; CPU runs without GPU passthrough
 linux_vulkan_asset=qwen3-tts-linux-x64-vulkan.tar.gz
-linux_cuda_asset=UNAVAILABLE # v0.1.6 only publishes Windows CUDA, not Linux CUDA
+linux_cpu_asset=qwen3-tts-linux-x64-vulkan.tar.gz # upstream has no separate Linux CPU asset; CPU runs same binary without GPU passthrough
 linux_vulkan_url=https://github.com/cgisky1980/Qwen3-TTS-Rust/releases/download/v0.1.6/qwen3-tts-linux-x64-vulkan.tar.gz
 sha256=867bbde32a499a6e9ff380e30ec92a3e1331d6ab9b18a6cdab4f63b4edf6b823
 observed_at=2026-05-07
-note=The v0.1.7 git tag exists, but no GitHub Release asset was published when checked. The v0.1.6 Linux asset nests llama.cpp libs under runtime/llama-b7885; docker/Dockerfile flattens lib*.so* into runtime/ for the upstream loader.
+note=The v0.1.7 git tag exists, but no GitHub Release asset was published when checked. The v0.1.6 Linux release only publishes a Vulkan asset. CPU mode intentionally reuses that asset without /dev/dri passthrough and relies on llama.cpp/ggml CPU fallback. The asset nests llama.cpp libs under runtime/llama-b7885; docker/Dockerfile flattens lib*.so* into runtime/ for the upstream loader.

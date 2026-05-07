@@ -9,8 +9,7 @@ Self-hosted Text-to-Speech stack. 当前阶段用于验证 **Qwen3-TTS + GGUF + 
 - Upstream: <https://github.com/cgisky1980/Qwen3-TTS-Rust>
 - Docker release pin: `v0.1.6`，详见 [`release.lock`](./release.lock)
   - Linux Vulkan: official `qwen3-tts-linux-x64-vulkan.tar.gz`
-  - Linux CPU: currently uses the same Linux Vulkan asset without GPU passthrough; no separate upstream CPU asset is published
-  - Linux CUDA: no upstream Linux CUDA release asset is published in `v0.1.6`; Windows CUDA asset exists but is not usable for Linux Docker
+  - Linux CPU: upstream has no separate CPU asset; this stack reuses the same Linux Vulkan asset without GPU passthrough and relies on llama.cpp/ggml CPU fallback
 - Source fallback commit: `32ed8f03c1ca9fbdcb3a888cb4006ca10ccfc74e`，详见 [`upstream.lock`](./upstream.lock)
 
 ## 验证顺序
@@ -34,9 +33,8 @@ make run
 默认 `BACKEND=vulkan`，会把 `/dev/dri` 暴露给容器。可选 backend：
 
 ```bash
-BACKEND=cpu make run      # 不挂 GPU 设备；用于 CPU fallback / 无 GPU 开发机
-BACKEND=vulkan make run   # 挂载 /dev/dri；AMD/Intel Vulkan 路线
-BACKEND=cuda make run     # 预留 NVIDIA CUDA 路线；当前缺少 upstream Linux CUDA release image
+BACKEND=vulkan make run   # 挂载 /dev/dri；AMD/Intel/NVIDIA Vulkan 路线
+BACKEND=cpu make run      # 不挂 GPU 设备；复用 Linux Vulkan release 的 CPU fallback
 ```
 
 首次运行会自动下载模型，耗时取决于网络。生成结果默认写到 `outputs/speech.wav`。
@@ -45,7 +43,7 @@ BACKEND=cuda make run     # 预留 NVIDIA CUDA 路线；当前缺少 upstream Li
 
 默认 Dockerfile 使用官方 GitHub Release 二进制包，不在镜像内编译 Rust。当前固定版本见 [`release.lock`](./release.lock)。
 
-注意：上游 `v0.1.6` 只发布了 Linux Vulkan asset；CPU 暂时复用该 asset 并不做 GPU passthrough，CUDA 需要后续补 Linux CUDA source-build image。
+注意：上游 `v0.1.6` 只发布了 Linux Vulkan asset；CPU 模式暂时复用该 asset，但不做 GPU passthrough，依赖 llama.cpp/ggml CPU fallback。
 
 ```bash
 BACKEND=vulkan make build-image   # 基于官方 Linux Vulkan release binary 构建镜像
