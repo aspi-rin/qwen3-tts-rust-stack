@@ -1,0 +1,4 @@
+services:
+  qwen3-tts:
+    environment:
+      QWEN3_TTS_BACKEND: cpu

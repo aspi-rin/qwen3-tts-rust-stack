@@ -7,6 +7,9 @@ ARG QWEN3_TTS_RUST_VERSION=v0.1.6
 ARG QWEN3_TTS_RUST_ASSET=qwen3-tts-linux-x64-vulkan.tar.gz
 ARG QWEN3_TTS_RUST_SHA256=867bbde32a499a6e9ff380e30ec92a3e1331d6ab9b18a6cdab4f63b4edf6b823
 ARG QWEN3_TTS_RUST_REPO=https://github.com/cgisky1980/Qwen3-TTS-Rust
+# cpu and vulkan currently use the same upstream Linux Vulkan asset. Without /dev/dri,
+# llama.cpp can still fall back to CPU execution on hosts where Vulkan is unavailable.
+ARG QWEN3_TTS_RUNTIME_BACKEND=vulkan
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -34,6 +37,7 @@ RUN set -eux; \
 
 COPY scripts /app/scripts
 
+ENV QWEN3_TTS_BACKEND=${QWEN3_TTS_RUNTIME_BACKEND}
 ENV RUST_LOG=info
 ENV MODEL_DIR=/app/models
 ENV SPEAKERS_DIR=/app/speakers

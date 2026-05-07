@@ -7,7 +7,10 @@ Self-hosted Text-to-Speech stack. 当前阶段用于验证 **Qwen3-TTS + GGUF + 
 ## 上游版本
 
 - Upstream: <https://github.com/cgisky1980/Qwen3-TTS-Rust>
-- Docker release: `v0.1.6` / `qwen3-tts-linux-x64-vulkan.tar.gz`，详见 [`release.lock`](./release.lock)
+- Docker release pin: `v0.1.6`，详见 [`release.lock`](./release.lock)
+  - Linux Vulkan: official `qwen3-tts-linux-x64-vulkan.tar.gz`
+  - Linux CPU: currently uses the same Linux Vulkan asset without GPU passthrough; no separate upstream CPU asset is published
+  - Linux CUDA: no upstream Linux CUDA release asset is published in `v0.1.6`; Windows CUDA asset exists but is not usable for Linux Docker
 - Source fallback commit: `32ed8f03c1ca9fbdcb3a888cb4006ca10ccfc74e`，详见 [`upstream.lock`](./upstream.lock)
 
 ## 验证顺序
@@ -28,22 +31,26 @@ make build-image
 make run
 ```
 
-默认 `BACKEND=vulkan`，会把 `/dev/dri` 暴露给容器。没有 GPU passthrough 的开发机可用：
+默认 `BACKEND=vulkan`，会把 `/dev/dri` 暴露给容器。可选 backend：
 
 ```bash
-BACKEND=none make run
+BACKEND=cpu make run      # 不挂 GPU 设备；用于 CPU fallback / 无 GPU 开发机
+BACKEND=vulkan make run   # 挂载 /dev/dri；AMD/Intel Vulkan 路线
+BACKEND=cuda make run     # 预留 NVIDIA CUDA 路线；当前缺少 upstream Linux CUDA release image
 ```
 
 首次运行会自动下载模型，耗时取决于网络。生成结果默认写到 `outputs/speech.wav`。
 
 ## Docker 构建与运行
 
-默认 Dockerfile 使用官方 GitHub Release 二进制包，不在镜像内编译 Rust。当前固定版本见 [`release.lock`](./release.lock)：`v0.1.6` / `qwen3-tts-linux-x64-vulkan.tar.gz`。
+默认 Dockerfile 使用官方 GitHub Release 二进制包，不在镜像内编译 Rust。当前固定版本见 [`release.lock`](./release.lock)。
+
+注意：上游 `v0.1.6` 只发布了 Linux Vulkan asset；CPU 暂时复用该 asset 并不做 GPU passthrough，CUDA 需要后续补 Linux CUDA source-build image。
 
 ```bash
-make build-image   # 基于官方 release binary 构建镜像
-make run           # 使用 Compose 执行一次合成任务
-make down          # 清理 Compose 资源
+BACKEND=vulkan make build-image   # 基于官方 Linux Vulkan release binary 构建镜像
+BACKEND=vulkan make run           # 使用 Compose 执行一次合成任务
+make down                         # 清理 Compose 资源
 ```
 
 如果在 AMD GPU 主机上运行，建议确认宿主机可用：
@@ -94,6 +101,6 @@ Content-Type: application/json
 ## 重要说明
 
 - 默认 Docker 镜像使用官方 release asset；如需从源码构建，可手动使用 `docker/Dockerfile.source`。
-- 开发机可能没有 GPU，因此可用 `BACKEND=none` 跳过 `/dev/dri` passthrough；性能仍需在目标 GPU 机器上确认。
+- 开发机可能没有 GPU，因此可用 `BACKEND=cpu` 跳过 GPU passthrough；性能仍需在目标 GPU 机器上确认。
 - 上游 README 声称 Linux/Windows 默认 Vulkan，macOS 默认 Metal；实际是否生效需在目标机器验证 runtime 日志和 RTF。
 - 上游当前也包含 `qwen3_tts_server`，但先不要把它视为最终服务 API；本轮先用 CLI 验证路线。
