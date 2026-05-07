@@ -1,0 +1,4 @@
+services:
+  qwen3-tts:
+    devices:
+      - /dev/dri:/dev/dri

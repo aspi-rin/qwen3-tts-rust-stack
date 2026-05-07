@@ -19,12 +19,12 @@ def main():
     ap.add_argument("--speaker", default=os.environ.get("SPEAKER", "vivian"))
     ap.add_argument("--quant", default=os.environ.get("QUANT", "q5_k_m"))
     ap.add_argument("--threads", default=os.environ.get("THREADS", "4"))
-    ap.add_argument("--text", action="append", help="Override/add test text; can be repeated")
-    ap.add_argument("--json-out", default=str(ROOT / "data/outputs/benchmark.json"))
+    ap.add_argument("--text", action="append", help="Override/add benchmark text; can be repeated")
+    ap.add_argument("--json-out", default=str(ROOT / "outputs/benchmark.json"))
     args = ap.parse_args()
 
     texts = args.text or DEFAULT_TEXTS
-    out_dir = ROOT / "data/outputs"
+    out_dir = ROOT / "outputs"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     subprocess.run([str(ROOT / "scripts/build_cli.sh")], check=True)
@@ -37,7 +37,7 @@ def main():
             "cargo", "run", "--manifest-path", str(ROOT / "upstream/Cargo.toml"),
             "--release", "--features", os.environ.get("FEATURES", "vulkan"),
             "--bin", "qwen3_tts", "--",
-            "--model-dir", str(ROOT / "data/models"),
+            "--model-dir", str(ROOT / "models"),
             "--quant", args.quant,
             "--threads", args.threads,
             "--speakers-dir", str(ROOT / "upstream/speakers"),

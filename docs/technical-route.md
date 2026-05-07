@@ -26,7 +26,7 @@ Qwen3-TTS
 
 ## 推进计划
 
-1. 跑通 Qwen3-TTS-Rust CLI。
+1. 优先使用官方 release binary 跑通 Qwen3-TTS-Rust CLI；必要时再从源码构建。
 2. 验证 Vulkan backend 是否生效。
 3. 测试中文质量、TTFB、RTF、稳定性。
 4. 达标后封 HTTP API。
@@ -46,5 +46,6 @@ Qwen3-TTS
 ## 风险
 
 - Vulkan 在容器内依赖宿主机 `/dev/dri`、ICD、驱动版本，需单独验证。
-- 上游首次运行自动下载模型和 runtime，生产部署建议预热并固化缓存目录。
+- Docker 默认固定官方 release `v0.1.6` 的 Linux Vulkan asset；后续升级需同步更新 `release.lock` 和 SHA256。
+- 上游首次运行自动下载模型，生产部署建议预热并固化缓存目录。
 - CLI RTF 不等同服务端 TTFB；封 API 后需要单独测首包延迟和并发行为。

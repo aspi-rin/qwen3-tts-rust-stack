@@ -10,5 +10,9 @@ fi
 echo "== DRM devices =="
 ls -l /dev/dri 2>/dev/null || echo "/dev/dri not available"
 echo "== llama runtime artifacts =="
-find "$ROOT/data/models" "$ROOT/upstream/runtime" -maxdepth 3 \( -name '*llama*' -o -name '*ggml*' \) -print 2>/dev/null || true
+for dir in "$ROOT/runtime" "$ROOT/models" "$ROOT/upstream/runtime"; do
+  if [ -d "$dir" ]; then
+    find "$dir" -maxdepth 3 \( -name '*llama*' -o -name '*ggml*' \) -print 2>/dev/null || true
+  fi
+done
 echo "Note: final confirmation is runtime logs + RTF on target GPU."

@@ -1,0 +1,30 @@
+FROM rust:1-bookworm AS builder
+ARG UPSTREAM_REPO=https://github.com/cgisky1980/Qwen3-TTS-Rust.git
+ARG UPSTREAM_REF=32ed8f03c1ca9fbdcb3a888cb4006ca10ccfc74e
+ARG FEATURES=vulkan
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git ca-certificates clang pkg-config cmake build-essential \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+RUN git clone ${UPSTREAM_REPO} upstream && cd upstream && git checkout --detach ${UPSTREAM_REF}
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/build/upstream/target \
+    cd upstream && cargo build --release --features "${FEATURES}" --bin qwen3_tts --bin qwen3_tts_server && \
+    cp target/release/qwen3_tts /usr/local/bin/qwen3_tts && \
+    cp target/release/qwen3_tts_server /usr/local/bin/qwen3_tts_server
+
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates libstdc++6 libgomp1 libssl3 vulkan-tools mesa-vulkan-drivers \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=builder /usr/local/bin/qwen3_tts /usr/local/bin/qwen3_tts
+COPY --from=builder /usr/local/bin/qwen3_tts_server /usr/local/bin/qwen3_tts_server
+COPY --from=builder /build/upstream/speakers /app/speakers
+COPY scripts /app/scripts
+RUN mkdir -p /app/models /app/outputs
+ENV RUST_LOG=info
+ENV MODEL_DIR=/app/models
+ENV SPEAKERS_DIR=/app/speakers
+ENTRYPOINT ["qwen3_tts"]
+CMD ["--help"]
