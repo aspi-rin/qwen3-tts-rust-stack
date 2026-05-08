@@ -10,9 +10,9 @@ services:
     tmpfs:
       - /tmp:size=512m,mode=1777
     command:
-      - --model-dir=${QWEN3_TTS_MODEL_DIR:-/app/models}
+      - --model-dir=/app/models
       - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
-      - --speakers-dir=${QWEN3_TTS_SPEAKERS_DIR:-/app/speakers}
+      - --speakers-dir=/app/speakers
       - --speaker=${QWEN3_TTS_SPEAKER:-vivian}
       - --text=${QWEN3_TTS_INPUT:-你好，我是本地语音合成服务。}
       - --output=/app/outputs/${QWEN3_TTS_OUTPUT:-speech.wav}
