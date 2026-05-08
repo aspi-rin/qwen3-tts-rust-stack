@@ -1,5 +1,8 @@
 # HTTP API 草案
 
+Current upstream service exposes `/api/tts`, `/api/tts/stream` (WebSocket), `/api/speakers`, and `/health`. The OpenAI-style API below is a future compatibility layer, not the current upstream server contract.
+
+
 目标：对齐 OpenAI TTS 风格，同时保留本地流式 PCM 能力。
 
 ## 非流式
