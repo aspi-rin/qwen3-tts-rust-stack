@@ -54,3 +54,7 @@ Accept: audio/pcm
 The current plan is documented in [`openai-adapter.md`](./openai-adapter.md).
 The compatibility layer should be implemented as a separate Go service in the
 stack, not as upstream `Qwen3-TTS-Rust` source changes.
+
+## Pinned schema
+
+The strict OpenAI-compatible request schema is pinned in [`../schemas/openai-audio-speech-request.schema.json`](../schemas/openai-audio-speech-request.schema.json) and documented in [`openai-speech-schema.md`](./openai-speech-schema.md).

@@ -57,6 +57,10 @@ Ports:
 The upstream port remains exposed during PoC so both layers can be tested
 independently.
 
+## Pinned schema
+
+The OpenAI-compatible request schema is pinned in [`schemas/openai-audio-speech-request.schema.json`](../schemas/openai-audio-speech-request.schema.json) and summarized in [`openai-speech-schema.md`](./openai-speech-schema.md). Implementation should validate against this schema before applying runtime support checks.
+
 ## Endpoints
 
 ### `GET /health`

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-audio-speech-request.schema.json",
+  "title": "OpenAI-compatible Create speech request",
+  "description": "Request body schema for POST /v1/audio/speech, pinned from the OpenAI Create speech API shape for this stack's compatibility layer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model",
+    "input",
+    "voice"
+  ],
+  "properties": {
+    "input": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "description": "The text to generate audio for."
+    },
+    "model": {
+      "type": "string",
+      "enum": [
+        "tts-1",
+        "tts-1-hd",
+        "gpt-4o-mini-tts",
+        "gpt-4o-mini-tts-2025-12-15"
+      ],
+      "description": "TTS model identifier documented by OpenAI for Create speech."
+    },
+    "voice": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "alloy",
+            "ash",
+            "ballad",
+            "cedar",
+            "coral",
+            "echo",
+            "fable",
+            "marin",
+            "nova",
+            "onyx",
+            "sage",
+            "shimmer",
+            "verse"
+          ],
+          "description": "OpenAI built-in voice name."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Custom voice identifier."
+            }
+          }
+        }
+      ],
+      "description": "Voice to use when generating audio: an OpenAI built-in voice or custom voice object."
+    },
+    "instructions": {
+      "type": "string",
+      "maxLength": 4096,
+      "description": "Instructions controlling voice affect, tone, pacing, or other delivery details."
+    },
+    "response_format": {
+      "type": "string",
+      "enum": [
+        "mp3",
+        "opus",
+        "aac",
+        "flac",
+        "wav",
+        "pcm"
+      ],
+      "default": "mp3",
+      "description": "Output audio format."
+    },
+    "speed": {
+      "type": "number",
+      "minimum": 0.25,
+      "maximum": 4.0,
+      "default": 1.0,
+      "description": "Generated audio speed multiplier."
+    },
+    "stream_format": {
+      "type": "string",
+      "enum": [
+        "sse",
+        "audio"
+      ],
+      "default": "audio",
+      "description": "Streaming response framing. audio returns audio bytes directly; sse returns audio events."
+    }
+  }
+}
