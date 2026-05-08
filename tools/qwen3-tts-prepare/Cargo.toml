@@ -1,0 +1,19 @@
+[package]
+name = "qwen3-tts-prepare"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "qwen3_tts_prepare"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+qwen3-tts = { path = "../../upstream" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[features]
+default = []
+vulkan = ["qwen3-tts/vulkan"]
+cuda = ["qwen3-tts/cuda"]

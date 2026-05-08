@@ -64,11 +64,16 @@ jobs:
         run: |
           docker run --rm qwen3-tts-rust-stack:v0.1.6-cpu --help
 
+      - name: Check prepare help
+        run: |
+          docker run --rm --entrypoint /app/qwen3_tts_prepare qwen3-tts-rust-stack:v0.1.6-cpu --help
+
       - name: Check server runtime files
         run: |
           docker run --rm --entrypoint bash qwen3-tts-rust-stack:v0.1.6-cpu -lc '
             set -eux
             test -x /app/qwen3_tts_server
+            test -x /app/qwen3_tts_prepare
             test -f /app/runtime/libonnxruntime.so
             test -f /app/runtime/libllama.so
             test -f /app/runtime/libggml.so
@@ -76,7 +81,11 @@ jobs:
             test -d /app/speakers
           '
 
-      - name: CPU compose server smoke
+      - name: CPU compose prepare smoke
         run: |
           mkdir -p models
-          docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts --help
+          docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts-init --help
+
+      - name: CPU compose server smoke
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm --no-deps qwen3-tts --help

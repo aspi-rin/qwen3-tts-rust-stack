@@ -1,8 +1,24 @@
 services:
+  qwen3-tts-init:
+    image: qwen3-tts-rust-stack:v0.1.6-vulkan
+    entrypoint: /app/qwen3_tts_prepare
+    command:
+      - --model-dir=/app/models
+      - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
+    volumes:
+      - ./models:/app/models:Z
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+
   qwen3-tts:
     image: qwen3-tts-rust-stack:v0.1.6-vulkan
     container_name: qwen3-tts
     restart: unless-stopped
+    depends_on:
+      qwen3-tts-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:9746:3000"
     volumes:
