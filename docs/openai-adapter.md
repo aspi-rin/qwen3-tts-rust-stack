@@ -8,8 +8,8 @@ HTTP requests into the current upstream HTTP/WebSocket API.
 
 ```text
 Client
-  -> qwen3-tts-openai-api (Go adapter)
-  -> qwen3-tts-server (upstream Rust server)
+  -> qwen3-tts-openai-api (Go adapter, OpenAI /v1 plus Qwen /api passthrough)
+  -> qwen3-tts-server (upstream Rust server, internal only)
   -> Qwen3-TTS-Rust engine
 ```
 
@@ -50,12 +50,12 @@ qwen3-tts-openai-api
 Ports:
 
 ```text
-127.0.0.1:9746 -> upstream qwen3-tts-server
-127.0.0.1:9747 -> OpenAI-compatible adapter
+127.0.0.1:9746 -> qwen3-tts-openai-api
 ```
 
-The upstream port remains exposed during PoC so both layers can be tested
-independently.
+The upstream Rust server is internal to Compose. The adapter serves
+OpenAI-compatible `/v1/*` routes and reverse-proxies Qwen-native `/api/*` routes
+to upstream, so both API families share one public host port.
 
 ## Pinned schema
 
@@ -77,9 +77,9 @@ Minimal OpenAI-style model list:
   "object": "list",
   "data": [
     {
-      "id": "qwen3-tts",
+      "id": "gpt-4o-mini-tts",
       "object": "model",
-      "owned_by": "local"
+      "owned_by": "openai-compatible-local"
     }
   ]
 }
@@ -91,13 +91,12 @@ Request shape:
 
 ```json
 {
-  "model": "qwen3-tts",
+  "model": "gpt-4o-mini-tts",
   "input": "你好，我是本地语音合成服务。",
-  "voice": "vivian",
+  "voice": {"id": "vivian"},
   "response_format": "pcm",
   "speed": 1.0,
-  "seed": 42,
-  "instruction": "自然、清晰"
+  "instructions": "自然、清晰"
 }
 ```
 
@@ -105,13 +104,12 @@ First version semantics:
 
 | Field | Behavior |
 | --- | --- |
-| `model` | Required/accepted; only `qwen3-tts` is supported initially. |
+| `model` | Required; accepts the pinned OpenAI model enum and maps to local Qwen3-TTS. |
 | `input` | Required; maps to upstream `text`. |
-| `voice` | Optional; maps to upstream `speaker`; default `vivian`. |
-| `response_format` | `pcm` or `wav`; default `pcm`. |
+| `voice` | Required; OpenAI built-in voices map to the configured default speaker; `{"id": "vivian"}` maps directly to a Qwen speaker. |
+| `response_format` | `pcm` or `wav` supported initially; other pinned OpenAI formats return `unsupported_feature_error`. |
 | `speed` | Accepted for client compatibility; ignored initially. |
-| `seed` | Optional; forwarded to upstream. |
-| `instruction` | Optional; forwarded to upstream. |
+| `instructions` | Optional; forwarded to upstream `instruction`. |
 
 ## Response Formats
 
@@ -169,15 +167,14 @@ handling in chunked responses.
 | `/v1/audio/speech`, `response_format=pcm` | `GET /api/tts/stream` WebSocket |
 | `input` | `text` |
 | `voice` | `speaker` |
-| `instruction` | `instruction` |
-| `seed` | `seed` |
+| `instructions` | `instruction` |
 
 ## Implementation Phases
 
 1. **Skeleton**
    - Go service with `/health` and `/v1/models`.
    - Dockerfile and compose service.
-   - Adapter port `9747`.
+   - Adapter port `9746`.
 
 2. **WAV path**
    - Implement non-streaming `/v1/audio/speech` with `response_format=wav`.
@@ -190,7 +187,11 @@ handling in chunked responses.
    - Convert f32le samples to s16le on the fly.
    - Flush after each chunk to preserve streaming behavior.
 
-4. **Smoke tests**
+4. **Qwen upstream passthrough**
+   - Reverse-proxy `/api/*` to the upstream Rust server so Qwen-native clients
+     can use the adapter port directly.
+
+5. **Smoke tests**
    - Add curl examples for WAV and PCM.
    - Add a small smoke script or reuse existing streaming smoke logic for the
      adapter endpoint.
@@ -210,12 +211,12 @@ handling in chunked responses.
 WAV:
 
 ```bash
-curl -sS http://127.0.0.1:9747/v1/audio/speech \
+curl -sS http://127.0.0.1:9746/v1/audio/speech \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "qwen3-tts",
+    "model": "gpt-4o-mini-tts",
     "input": "你好，这是 OpenAI 风格接口测试。",
-    "voice": "vivian",
+    "voice": {"id": "vivian"},
     "response_format": "wav"
   }' \
   -o /tmp/qwen3-openai.wav
@@ -224,12 +225,12 @@ curl -sS http://127.0.0.1:9747/v1/audio/speech \
 PCM streaming:
 
 ```bash
-curl -N http://127.0.0.1:9747/v1/audio/speech \
+curl -N http://127.0.0.1:9746/v1/audio/speech \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "qwen3-tts",
+    "model": "gpt-4o-mini-tts",
     "input": "你好，这是流式 PCM 测试。",
-    "voice": "vivian",
+    "voice": {"id": "vivian"},
     "response_format": "pcm"
   }' \
   -o /tmp/qwen3-openai.s16le.pcm

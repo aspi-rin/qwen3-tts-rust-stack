@@ -14,6 +14,8 @@ COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml
 
 IMAGE_cpu := qwen3-tts-rust-stack:v0.1.6-cpu
 IMAGE_vulkan := qwen3-tts-rust-stack:v0.1.6-vulkan
+ADAPTER_IMAGE := qwen3-tts-openai-api:latest
+GO_ADAPTER_DIR := services/openai-api
 
 SUPPORTED_BACKENDS := cpu vulkan
 SUPPORTED_QUANTS := none q5_k_m q8_0
@@ -40,18 +42,22 @@ check:
 
 fmt:
 	$(CARGO) fmt --manifest-path $(PREPARE_MANIFEST)
+	cd $(GO_ADAPTER_DIR) && gofmt -w .
 
 fmt-check:
 	$(CARGO) fmt --manifest-path $(PREPARE_MANIFEST) -- --check
+	@test -z "$$(cd $(GO_ADAPTER_DIR) && gofmt -l .)"
 
 test:
 	$(CARGO) test --manifest-path $(PREPARE_MANIFEST) --lib --no-default-features
+	cd $(GO_ADAPTER_DIR) && go test ./...
 
 up: check
 	mkdir -p models
 	docker build -f docker/Dockerfile \
 		--build-arg QWEN3_TTS_RUNTIME_BACKEND=$(BACKEND) \
 		-t $(IMAGE) .
+	docker build -f $(GO_ADAPTER_DIR)/Dockerfile -t $(ADAPTER_IMAGE) .
 	$(COMPOSE) up -d --force-recreate
 
 down:

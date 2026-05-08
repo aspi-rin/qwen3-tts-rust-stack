@@ -19,8 +19,6 @@ services:
     depends_on:
       qwen3-tts-model-download:
         condition: service_completed_successfully
-    ports:
-      - "127.0.0.1:9746:3000"
     volumes:
       - ./models:/app/models:Z
     security_opt:
@@ -41,3 +39,25 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
+
+  qwen3-tts-openai-api:
+    image: qwen3-tts-openai-api:latest
+    container_name: qwen3-tts-openai-api
+    restart: unless-stopped
+    depends_on:
+      qwen3-tts-server:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:9746:8080"
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://127.0.0.1:8080/health >/dev/null
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

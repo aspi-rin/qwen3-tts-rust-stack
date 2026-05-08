@@ -44,6 +44,29 @@ jobs:
       - name: Validate Dockerfile syntax
         run: |
           docker build --check -f docker/Dockerfile .
+          docker build --check -f services/openai-api/Dockerfile .
+
+  go-adapter:
+    name: Go adapter checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/openai-api/go.mod
+          cache-dependency-path: services/openai-api/go.sum
+
+      - name: Check formatting
+        run: |
+          test -z "$(cd services/openai-api && gofmt -l .)"
+
+      - name: Run tests
+        run: |
+          cd services/openai-api
+          go test ./...
 
   rust-tools:
     name: Rust wrapper checks
@@ -53,6 +76,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/openai-api/go.mod
+          cache-dependency-path: services/openai-api/go.sum
 
       - name: Install rustfmt
         run: rustup component add rustfmt
@@ -77,6 +106,10 @@ jobs:
           docker build -f docker/Dockerfile \
             --build-arg QWEN3_TTS_RUNTIME_BACKEND=cpu \
             -t qwen3-tts-rust-stack:v0.1.6-cpu .
+
+      - name: Build adapter image
+        run: |
+          docker build -f services/openai-api/Dockerfile -t qwen3-tts-openai-api:latest .
 
       - name: Check server help
         run: |
@@ -107,3 +140,8 @@ jobs:
       - name: CPU compose server smoke
         run: |
           docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm --no-deps qwen3-tts-server --help
+
+      - name: Adapter container smoke
+        run: |
+          docker run --rm qwen3-tts-openai-api:latest --help
+          docker run --rm --entrypoint test qwen3-tts-openai-api:latest -x /app/qwen3_openai_api

@@ -2,13 +2,15 @@
 
 Self-hosted Text-to-Speech service stack for [`Qwen3-TTS-Rust`](https://github.com/cgisky1980/Qwen3-TTS-Rust), Docker Compose, and streaming-oriented local deployment.
 
-Current service endpoints come from upstream `qwen3_tts_server`:
+The public host port is served by the stack adapter. It supports OpenAI-compatible `/v1/*` endpoints and passes Qwen-native `/api/*` endpoints through to upstream `qwen3_tts_server`:
 
 ```text
 GET  /health
-GET  /api/speakers
-POST /api/tts
-GET  /api/tts/stream   # WebSocket streaming TTS
+GET  /v1/models
+POST /v1/audio/speech  # OpenAI-compatible TTS
+GET  /api/speakers     # Qwen passthrough
+POST /api/tts          # Qwen passthrough
+GET  /api/tts/stream   # Qwen WebSocket passthrough
 ```
 
 ## Quick start
@@ -18,7 +20,7 @@ Requirements: Linux, Docker with Compose plugin, git submodules initialized.
 ```bash
 git submodule update --init --recursive
 cp .env.example .env
-make up        # builds the local image, prepares models, then starts qwen3_tts_server
+make up        # builds images, prepares models, then starts upstream server + adapter
 make down      # stop the service
 ```
 
@@ -44,7 +46,7 @@ Container-internal paths are fixed: models at `/app/models`, speakers at `/app/s
 
 ## Development
 
-The stack has a small local Rust wrapper for model preparation under `tools/qwen3-tts-model-download`.
+The stack has a small local Rust wrapper for model preparation under `tools/qwen3-tts-model-download` and a Go OpenAI-compatible adapter under `services/openai-api`.
 
 ```bash
 make fmt-check
@@ -71,6 +73,7 @@ CPU mode currently reuses the same Linux Vulkan runtime bundle without `/dev/dri
 
 ```bash
 curl -fsS http://127.0.0.1:9746/health
+curl -fsS http://127.0.0.1:9746/v1/models
 curl -fsS http://127.0.0.1:9746/api/speakers
 ```
 
@@ -85,7 +88,7 @@ The runtime image uses Debian trixie for newer Mesa Vulkan drivers. Debian
 bookworm's Mesa can fail to recognize newer AMD GPUs and silently fall back to
 CPU-heavy execution.
 
-For streaming, use the upstream WebSocket endpoint:
+For Qwen-native streaming, use the passthrough WebSocket endpoint:
 
 ```text
 ws://127.0.0.1:9746/api/tts/stream
@@ -100,13 +103,16 @@ python3 tools/stream-smoke/qwen3_tts_stream_smoke.py \
 aplay /tmp/qwen3-tts-stream.wav
 ```
 
-The initial API is upstream-compatible. A later stack layer can add an OpenAI-style endpoint:
+OpenAI-compatible examples:
 
-```http
-POST /v1/audio/speech
+```bash
+curl -N http://127.0.0.1:9746/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-4o-mini-tts","input":"你好，这是 OpenAI 兼容接口测试。","voice":{"id":"vivian"},"response_format":"pcm"}' \
+  -o /tmp/qwen3-openai.s16le.pcm
+
+aplay -f S16_LE -r 24000 -c 1 /tmp/qwen3-openai.s16le.pcm
 ```
-
-with raw PCM/WAV streaming semantics.
 
 ## Validation goals
 

@@ -1,9 +1,9 @@
 # HTTP API 草案
 
-Current upstream service exposes `/api/tts`, `/api/tts/stream` (WebSocket), `/api/speakers`, and `/health`. The OpenAI-style API below is a future compatibility layer, not the current upstream server contract.
+The stack adapter exposes OpenAI-compatible `/v1/*` routes and bypasses Qwen-native `/api/*` routes to the upstream Rust server. `/api/tts`, `/api/tts/stream` (WebSocket), and `/api/speakers` remain available on the public adapter port for compatibility.
 
 
-目标：对齐 OpenAI TTS 风格，同时保留本地流式 PCM 能力。
+目标：对齐 OpenAI TTS 风格，同时保留本地 Qwen API 和流式 PCM 能力。
 
 ## 非流式
 
@@ -13,21 +13,17 @@ Current upstream service exposes `/api/tts`, `/api/tts/stream` (WebSocket), `/ap
 
 ```json
 {
-  "model": "qwen3-tts",
+  "model": "gpt-4o-mini-tts",
   "input": "你好，我是本地语音合成服务。",
-  "voice": "default",
+  "voice": {"id": "vivian"},
   "response_format": "pcm",
-  "instruction": "自然、清晰",
-  "temperature": 0.7,
-  "top_k": 40,
-  "top_p": 0.9,
-  "seed": 42
+  "instructions": "自然、清晰"
 }
 ```
 
 响应格式：
 
-- `response_format=pcm`: `audio/pcm; rate=24000; format=f32le` 或最终确定的 PCM 格式。
+- `response_format=pcm`: `audio/pcm`，24kHz mono s16le HTTP chunked bytes。
 - `response_format=wav`: `audio/wav`。
 
 ## 流式
@@ -35,20 +31,23 @@ Current upstream service exposes `/api/tts`, `/api/tts/stream` (WebSocket), `/ap
 优先方案：HTTP chunked response，直接返回 PCM chunks。
 
 ```http
-POST /v1/audio/speech?stream=true
-Accept: audio/pcm
+POST /v1/audio/speech
+Content-Type: application/json
+
+{"response_format":"pcm","stream_format":"audio", ...}
 ```
 
-备选方案：WebSocket 或 SSE + base64 音频块。
+`stream_format=sse` 和 mp3/opus/aac/flac 编码暂不实现，先返回 OpenAI-style unsupported error。
 
 ## 映射关系
 
 | OpenAI 风格字段 | Qwen3-TTS-Rust 字段 |
 | --- | --- |
 | `input` | CLI/API `text` |
-| `voice` | speaker name 或 voice file |
+| `voice` | OpenAI voice -> 默认 speaker；`{"id":"vivian"}` -> Qwen speaker |
 | `response_format` | pcm/wav 输出选择 |
-| `model` | 固定 `qwen3-tts`，后续可映射 quant/backend |
+| `model` | OpenAI model enum -> 本地 Qwen3-TTS |
+| `instructions` | `instruction` |
 ## Adapter implementation plan
 
 The current plan is documented in [`openai-adapter.md`](./openai-adapter.md).
