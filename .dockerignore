@@ -2,7 +2,6 @@
 .gitignore
 .dockerignore
 .env
-upstream
 target
 models
 *.log

@@ -1,33 +1,32 @@
 # Source-built Qwen3-TTS-Rust server image.
-# We build qwen3_tts_server from a pinned upstream commit because the official
-# release artifacts only package the one-shot CLI binary, not the streaming server.
+# We build qwen3_tts_server from the pinned upstream git submodule because the
+# official release artifacts only package the one-shot CLI binary, not the
+# streaming server.
 FROM rust:1-bookworm AS builder
 
-ARG UPSTREAM_REPO=https://github.com/cgisky1980/Qwen3-TTS-Rust.git
-ARG UPSTREAM_REF=32ed8f03c1ca9fbdcb3a888cb4006ca10ccfc74e
 ARG FEATURES=vulkan
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     clang \
     cmake \
-    git \
     libasound2-dev \
     libssl-dev \
     pkg-config \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /build
-RUN git clone "${UPSTREAM_REPO}" upstream \
- && cd upstream \
- && git checkout --detach "${UPSTREAM_REF}" \
- && sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
+WORKDIR /build/upstream
+COPY upstream/ /build/upstream/
+
+# Upstream pinned commit currently resolves ort rc.12, whose SessionBuilder API
+# needs mutable builders. Keep the patch local until upstream carries it or the
+# crate lockfile is pinned differently.
+RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
  && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
-    cd upstream \
- && cargo build --release --features "${FEATURES}" --bin qwen3_tts_server \
+    cargo build --release --features "${FEATURES}" --bin qwen3_tts_server \
  && cp target/release/qwen3_tts_server /tmp/qwen3_tts_server
 
 FROM debian:bookworm-slim AS runtime-bundle

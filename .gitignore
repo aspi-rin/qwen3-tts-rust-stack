@@ -1,5 +1,4 @@
 /target/
-/upstream/
 /models/*
 !/models/.gitkeep
 *.log

@@ -13,9 +13,10 @@ GET  /api/tts/stream   # WebSocket streaming TTS
 
 ## Quick start
 
-Requirements: Linux, Docker with Compose plugin.
+Requirements: Linux, Docker with Compose plugin, git submodules initialized.
 
 ```bash
+git submodule update --init --recursive
 cp .env.example .env
 make up        # builds the local server image, then starts qwen3_tts_server
 make down      # stop the service
@@ -49,7 +50,7 @@ We do **not** use the official Qwen3-TTS-Rust release binary as the application 
 
 Instead, `docker/Dockerfile`:
 
-1. builds `qwen3_tts_server` from the pinned upstream source commit in [`upstream.lock`](./upstream.lock);
+1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock);
 2. vendors the pinned Linux Vulkan runtime bundle documented in [`runtime.lock`](./runtime.lock) for llama.cpp/ONNX shared libraries;
 3. starts a long-running HTTP/WebSocket service with Docker Compose.
 
