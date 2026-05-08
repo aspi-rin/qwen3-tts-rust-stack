@@ -90,6 +90,15 @@ For streaming, use the upstream WebSocket endpoint:
 ws://127.0.0.1:9746/api/tts/stream
 ```
 
+The repo includes a stdlib-only WebSocket smoke client that records streamed
+f32le PCM, writes a WAV copy, and reports TTFB/chunk/RTF metrics:
+
+```bash
+python3 tools/stream-smoke/qwen3_tts_stream_smoke.py \
+  --text '你好，这是本地流式语音合成测试。'
+aplay /tmp/qwen3-tts-stream.wav
+```
+
 The initial API is upstream-compatible. A later stack layer can add an OpenAI-style endpoint:
 
 ```http
