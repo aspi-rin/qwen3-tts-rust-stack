@@ -23,9 +23,8 @@ COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 # - ort rc.12 SessionBuilder API needs mutable builders.
 # - upstream leaves ort on a floating rc prerelease and enables CUDA/DirectML
 #   features unconditionally; pin rc.11 and keep only dynamic CPU ONNX loading.
-# - quantized downloads put qwen3_assets.gguf under the quant folder, but
-#   assets are expected to remain F32 under gguf/. Keep these local until
-#   upstream carries fixes.
+# - qwen3_assets.gguf layout is normalized by qwen3_tts_model_download rather
+#   than patching upstream download.rs.
 # - upstream verifies the Windows Vulkan backend filename on every platform;
 #   check the platform-correct shared object so container logs make Vulkan
 #   backend failures obvious.
@@ -34,7 +33,6 @@ RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = b
  && sed -i 's/use ort::execution_providers::DirectMLExecutionProvider;/#[cfg(windows)]\nuse ort::execution_providers::DirectMLExecutionProvider;/' src/models/onnx.rs \
  && sed -i 's/version = "2.0.0-rc.11"/version = "=2.0.0-rc.11"/' Cargo.toml \
  && sed -i 's/features = \["ndarray", "load-dynamic", "cuda", "directml"\]/features = ["ndarray", "load-dynamic"]/' Cargo.toml \
- && sed -i '/qwen3_assets.gguf/,+1 s@format!("{}/qwen3_assets.gguf", quant_folder)@"gguf/qwen3_assets.gguf".to_owned()@g' src/download.rs \
  && sed -i 's@let runtime_dir = PathBuf::from("runtime");@let runtime_dir = PathBuf::from(std::env::var("QWEN3_TTS_RUNTIME_DIR").unwrap_or_else(|_| "/app/runtime".to_string()));@' src/models/onnx.rs \
  && sed -i '/let env_builder =/i\    std::env::set_var("ORT_DYLIB_PATH", &dll_path);\n    println!("  [ONNX] ORT_DYLIB_PATH={}", dll_path.display());' src/models/onnx.rs \
  && sed -i 's@let vulkan_path = runtime_path.join("ggml-vulkan.dll");@let vulkan_name = if cfg!(target_os = "windows") { "ggml-vulkan.dll" } else if cfg!(target_os = "macos") { "libggml-metal.dylib" } else { "libggml-vulkan.so" };\

@@ -1,6 +1,6 @@
 use clap::Parser;
 use qwen3_tts::TtsEngine;
-use qwen3_tts_model_download::validate_quant;
+use qwen3_tts_model_download::{normalize_assets_layout, validate_quant};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -27,6 +27,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     TtsEngine::download_models(&args.model_dir, &args.quant)
         .await
         .map_err(|e| format!("Model download failed: {}", e))?;
+
+    if normalize_assets_layout(&args.model_dir, &args.quant)? {
+        println!(
+            "Normalized qwen3_assets.gguf into {:?}",
+            args.model_dir.join("gguf")
+        );
+    }
 
     println!("Model download completed. Model files are ready.");
     Ok(())
