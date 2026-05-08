@@ -12,9 +12,9 @@ services:
     tmpfs:
       - /tmp:size=512m,mode=1777
 
-  qwen3-tts:
+  qwen3-tts-server:
     image: qwen3-tts-rust-stack:v0.1.6-vulkan
-    container_name: qwen3-tts
+    container_name: qwen3-tts-server
     restart: unless-stopped
     depends_on:
       qwen3-tts-model-download:

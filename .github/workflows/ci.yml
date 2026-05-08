@@ -106,4 +106,4 @@ jobs:
 
       - name: CPU compose server smoke
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm --no-deps qwen3-tts --help
+          docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm --no-deps qwen3-tts-server --help

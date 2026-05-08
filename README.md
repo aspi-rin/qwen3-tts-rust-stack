@@ -62,7 +62,7 @@ Instead, `docker/Dockerfile`:
 1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock);
 2. builds the local `qwen3_tts_model_download` wrapper, which only calls upstream model preparation logic;
 3. vendors the pinned Linux Vulkan runtime bundle documented in [`runtime.lock`](./runtime.lock) for llama.cpp/ONNX shared libraries;
-4. runs `qwen3-tts-model-download` before starting the long-running HTTP/WebSocket service.
+4. runs `qwen3-tts-model-download` before starting the long-running `qwen3-tts-server` HTTP/WebSocket service.
 
 CPU mode currently reuses the same Linux Vulkan runtime bundle without `/dev/dri` passthrough and relies on llama.cpp/ggml CPU fallback.
 

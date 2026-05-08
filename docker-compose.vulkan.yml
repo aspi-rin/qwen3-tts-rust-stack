@@ -1,5 +1,5 @@
 services:
-  qwen3-tts:
+  qwen3-tts-server:
     environment:
       QWEN3_TTS_BACKEND: vulkan
     devices:

@@ -4,7 +4,7 @@ services:
     environment:
       QWEN3_TTS_BACKEND: cpu
 
-  qwen3-tts:
+  qwen3-tts-server:
     image: qwen3-tts-rust-stack:v0.1.6-cpu
     environment:
       QWEN3_TTS_BACKEND: cpu
