@@ -69,9 +69,31 @@ jobs:
             test -d /app/speakers
           '
 
-      - name: CPU compose smoke without model download
+      - name: CPU compose command smoke
         run: |
           mkdir -p models outputs
+          set +e
+          # Use an unwritable model dir so the pinned release parses the real
+          # Compose command, then fails fast at runtime initialization instead
+          # of downloading models in CI.
           QWEN3_TTS_INPUT='你好' \
+          QWEN3_TTS_MODEL_DIR=/proc/qwen3-models \
           QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-cpu \
-            docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts --help
+            timeout 45s docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts >compose.log 2>&1
+          status=$?
+          set -e
+          cat compose.log
+          if grep -q "unexpected argument" compose.log; then
+            echo "Compose command contains an argument unsupported by the pinned release CLI" >&2
+            exit 1
+          fi
+          if [ "$status" -eq 0 ]; then
+            echo "Compose command completed successfully"
+            exit 0
+          fi
+          if grep -Eiq "Model download failed|Failed to|not found|No such file|download|Permission denied|Read-only file system" compose.log; then
+            echo "Compose command reached runtime/model initialization; treating as CLI argument smoke pass"
+            exit 0
+          fi
+          echo "Compose command failed before expected runtime/model initialization" >&2
+          exit "$status"
