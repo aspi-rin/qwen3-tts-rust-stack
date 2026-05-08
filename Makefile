@@ -10,8 +10,8 @@ COMPOSE_CMD ?= docker compose
 COMPOSE_FILES_cpu := -f docker-compose.yml -f docker-compose.cpu.yml
 COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml
 
-QWEN3_TTS_IMAGE_cpu := qwen3-tts-rust-stack:v0.1.6-cpu
-QWEN3_TTS_IMAGE_vulkan := qwen3-tts-rust-stack:v0.1.6-vulkan
+IMAGE_cpu := qwen3-tts-rust-stack:v0.1.6-cpu
+IMAGE_vulkan := qwen3-tts-rust-stack:v0.1.6-vulkan
 
 SUPPORTED_BACKENDS := cpu vulkan
 SUPPORTED_QUANTS := none q5_k_m q8_0
@@ -23,8 +23,8 @@ $(error Unsupported QUANT=$(QUANT). Use one of: $(SUPPORTED_QUANTS))
 endif
 
 COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
-QWEN3_TTS_IMAGE := $(QWEN3_TTS_IMAGE_$(BACKEND))
-COMPOSE := QWEN3_TTS_IMAGE=$(QWEN3_TTS_IMAGE) $(COMPOSE_CMD) $(COMPOSE_FILES)
+IMAGE := $(IMAGE_$(BACKEND))
+COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 
 .PHONY: check build-image run down clean
 
@@ -38,7 +38,7 @@ check:
 build-image:
 	docker build -f docker/Dockerfile \
 		--build-arg QWEN3_TTS_RUNTIME_BACKEND=$(BACKEND) \
-		-t $(QWEN3_TTS_IMAGE) .
+		-t $(IMAGE) .
 
 run: check
 	mkdir -p models outputs
