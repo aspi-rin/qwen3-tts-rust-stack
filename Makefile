@@ -26,7 +26,7 @@ COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
 IMAGE := $(IMAGE_$(BACKEND))
 COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 
-.PHONY: check up down clean
+.PHONY: check up down
 
 check:
 	@$(COMPOSE_CMD) version >/dev/null 2>&1 || (echo "Compose command failed: $(COMPOSE_CMD). Install Docker Compose plugin or run with COMPOSE_CMD=docker-compose" >&2; exit 2)
@@ -45,5 +45,3 @@ up: check
 down:
 	$(COMPOSE) down
 
-clean:
-	rm -rf models

@@ -28,7 +28,6 @@ jobs:
           make -n check BACKEND=cpu
           make -n up BACKEND=cpu
           make -n down BACKEND=cpu
-          make -n clean
 
       - name: Validate Compose config
         run: |
