@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate stack files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Makefile dry-runs
+        run: |
+          make -n check BACKEND=cpu
+          make -n build-image BACKEND=cpu
+          make -n run BACKEND=cpu
+          make -n down BACKEND=cpu
+          make -n clean
+
+      - name: Validate Compose config
+        run: |
+          QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-cpu \
+            docker compose -f docker-compose.yml -f docker-compose.cpu.yml config
+          QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-vulkan \
+            docker compose -f docker-compose.yml -f docker-compose.vulkan.yml config
+
+      - name: Validate Dockerfile syntax
+        run: |
+          docker build --check -f docker/Dockerfile .
+          docker build --check -f docker/Dockerfile.source .
+
+  cpu-smoke:
+    name: CPU image smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build CPU image
+        run: BACKEND=cpu make build-image
+
+      - name: Check binary help
+        run: |
+          docker run --rm qwen3-tts-rust-stack:v0.1.6-cpu --help
+
+      - name: Check release runtime libraries
+        run: |
+          docker run --rm --entrypoint bash qwen3-tts-rust-stack:v0.1.6-cpu -lc '
+            set -eux
+            test -x /app/qwen3_tts
+            test -f /app/runtime/libonnxruntime.so
+            test -f /app/runtime/libllama.so
+            test -f /app/runtime/libggml.so
+            test -f /app/runtime/libggml-vulkan.so
+            test -d /app/speakers
+          '
+
+      - name: CPU compose smoke without model download
+        run: |
+          mkdir -p models outputs
+          QWEN3_TTS_INPUT='你好' \
+          QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-cpu \
+            docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts --help
