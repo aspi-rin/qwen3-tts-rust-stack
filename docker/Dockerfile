@@ -26,7 +26,9 @@ COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 #   upstream carries fixes.
 RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
  && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
- && sed -i '/qwen3_assets.gguf/,+1 s@format!("{}/qwen3_assets.gguf", quant_folder)@"gguf/qwen3_assets.gguf".to_owned()@g' src/download.rs
+ && sed -i '/qwen3_assets.gguf/,+1 s@format!("{}/qwen3_assets.gguf", quant_folder)@"gguf/qwen3_assets.gguf".to_owned()@g' src/download.rs \
+ && sed -i 's@let runtime_dir = PathBuf::from("runtime");@let runtime_dir = PathBuf::from(std::env::var("QWEN3_TTS_RUNTIME_DIR").unwrap_or_else(|_| "/app/runtime".to_string()));@' src/models/onnx.rs \
+ && sed -i '/let env_builder =/i\    std::env::set_var("ORT_DYLIB_PATH", &dll_path);\n    println!("  [ONNX] ORT_DYLIB_PATH={}", dll_path.display());' src/models/onnx.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
@@ -83,6 +85,8 @@ RUN chmod +x /app/qwen3_tts_server /app/qwen3_tts_model_download \
 ENV QWEN3_TTS_BACKEND=${QWEN3_TTS_RUNTIME_BACKEND}
 ENV RUST_LOG=info
 ENV LD_LIBRARY_PATH=/app/runtime:/app/runtime/llama-b7885
+ENV QWEN3_TTS_RUNTIME_DIR=/app/runtime
+ENV ORT_DYLIB_PATH=/app/runtime/libonnxruntime.so
 
 EXPOSE 3000
 ENTRYPOINT ["/app/qwen3_tts_server"]
