@@ -33,10 +33,8 @@ jobs:
 
       - name: Validate Compose config
         run: |
-          QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-cpu \
-            docker compose -f docker-compose.yml -f docker-compose.cpu.yml config
-          QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-vulkan \
-            docker compose -f docker-compose.yml -f docker-compose.vulkan.yml config
+          docker compose -f docker-compose.yml -f docker-compose.cpu.yml config
+          docker compose -f docker-compose.yml -f docker-compose.vulkan.yml config
 
       - name: Validate Dockerfile syntax
         run: |
@@ -75,9 +73,7 @@ jobs:
           set +e
           # Exercise the real Compose command. This may reach model download/runtime
           # initialization, but should not fail at CLI argument parsing.
-          QWEN3_TTS_INPUT='你好' \
-          QWEN3_TTS_IMAGE=qwen3-tts-rust-stack:v0.1.6-cpu \
-            timeout 45s docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts >compose.log 2>&1
+          timeout 45s docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts >compose.log 2>&1
           status=$?
           set -e
           cat compose.log

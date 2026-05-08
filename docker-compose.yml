@@ -1,6 +1,6 @@
 services:
   qwen3-tts:
-    image: ${QWEN3_TTS_IMAGE:-qwen3-tts-rust-stack:v0.1.6-vulkan}
+    image: qwen3-tts-rust-stack:v0.1.6-vulkan
     container_name: qwen3-tts
     volumes:
       - ./models:/app/models:Z
@@ -14,5 +14,5 @@ services:
       - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
       - --speakers-dir=/app/speakers
       - --speaker=${QWEN3_TTS_SPEAKER:-vivian}
-      - --text=${QWEN3_TTS_INPUT:-你好，我是本地语音合成服务。}
-      - --output=/app/outputs/${QWEN3_TTS_OUTPUT:-speech.wav}
+      - --text=你好，我是本地语音合成服务。
+      - --output=/app/outputs/speech.wav

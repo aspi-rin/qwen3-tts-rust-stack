@@ -37,21 +37,18 @@ BACKEND=vulkan make run   # 挂载 /dev/dri；AMD/Intel/NVIDIA Vulkan 路线
 BACKEND=cpu make run      # 不挂 GPU 设备；复用 Linux Vulkan release 的 CPU fallback
 ```
 
-首次运行会自动下载模型，耗时取决于网络。`make run` 会自动创建 `models/` 和 `outputs/`，生成结果默认写到 `outputs/speech.wav`。
+首次运行会自动下载模型，耗时取决于网络。`make run` 会自动创建 `models/` 和 `outputs/`，并执行一条固定的 CLI smoke 合成，结果写到 `outputs/speech.wav`。
 
 
 ## Configuration
 
-`.env` intentionally keeps the configurable surface small:
+`.env` intentionally only contains runtime knobs, not sample invocation text/output:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `QWEN3_TTS_BACKEND` | `vulkan` | `vulkan` passes `/dev/dri`; `cpu` does not. |
-| `QWEN3_TTS_IMAGE` | backend default | Optional image override. Leave empty normally. |
 | `QWEN3_TTS_QUANT` | `q5_k_m` | Qwen3-TTS quantization helper. |
 | `QWEN3_TTS_SPEAKER` | `vivian` | Built-in speaker name. |
-| `QWEN3_TTS_INPUT` | sample Chinese text | Text to synthesize. |
-| `QWEN3_TTS_OUTPUT` | `speech.wav` | Output filename under `outputs/`. |
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, outputs at `/app/outputs`.
 

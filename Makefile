@@ -14,14 +14,14 @@ ifeq ($(filter $(BACKEND),$(SUPPORTED_BACKENDS)),)
 $(error Unsupported BACKEND=$(BACKEND). Use one of: $(SUPPORTED_BACKENDS))
 endif
 
-QWEN3_TTS_IMAGE_cpu ?= qwen3-tts-rust-stack:v0.1.6-cpu
-QWEN3_TTS_IMAGE_vulkan ?= qwen3-tts-rust-stack:v0.1.6-vulkan
-IMAGE ?= $(or $(QWEN3_TTS_IMAGE),$(QWEN3_TTS_IMAGE_$(BACKEND)))
+IMAGE_cpu ?= qwen3-tts-rust-stack:v0.1.6-cpu
+IMAGE_vulkan ?= qwen3-tts-rust-stack:v0.1.6-vulkan
+IMAGE := $(IMAGE_$(BACKEND))
 
 COMPOSE_FILES_cpu := -f docker-compose.yml -f docker-compose.cpu.yml
 COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml
 COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
-COMPOSE := QWEN3_TTS_IMAGE=$(IMAGE) $(COMPOSE_CMD) $(COMPOSE_FILES)
+COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 
 .PHONY: check build-image run down clean
 
