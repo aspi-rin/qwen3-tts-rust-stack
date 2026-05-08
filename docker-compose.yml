@@ -4,7 +4,7 @@ services:
     container_name: qwen3-tts
     restart: unless-stopped
     ports:
-      - "${QWEN3_TTS_HOST:-127.0.0.1}:${QWEN3_TTS_PORT:-3000}:3000"
+      - "127.0.0.1:9746:3000"
     volumes:
       - ./models:/app/models:Z
     security_opt:
@@ -13,7 +13,6 @@ services:
       - /tmp:size=512m,mode=1777
     command:
       - --host=0.0.0.0
-      - --port=3000
       - --model-dir=/app/models
       - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
       - --speakers-dir=/app/speakers

@@ -38,8 +38,6 @@ The first startup downloads Qwen3-TTS model files into `./models`, so it can tak
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `QWEN3_TTS_BACKEND` | `vulkan` | `vulkan` passes `/dev/dri`; `cpu` does not. |
-| `QWEN3_TTS_HOST` | `127.0.0.1` | Host interface exposed by Compose. |
-| `QWEN3_TTS_PORT` | `3000` | Host port mapped to the service. |
 | `QWEN3_TTS_QUANT` | `q5_k_m` | Qwen3-TTS quantization helper: `none`, `q5_k_m`, or `q8_0`. |
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, runtime libs at `/app/runtime`.
@@ -59,14 +57,14 @@ CPU mode currently reuses the same Linux Vulkan runtime bundle without `/dev/dri
 ## Basic checks
 
 ```bash
-curl -fsS http://127.0.0.1:3000/health
-curl -fsS http://127.0.0.1:3000/api/speakers
+curl -fsS http://127.0.0.1:9746/health
+curl -fsS http://127.0.0.1:9746/api/speakers
 ```
 
 For streaming, use the upstream WebSocket endpoint:
 
 ```text
-ws://127.0.0.1:3000/api/tts/stream
+ws://127.0.0.1:9746/api/tts/stream
 ```
 
 The initial API is upstream-compatible. A later stack layer can add an OpenAI-style endpoint:

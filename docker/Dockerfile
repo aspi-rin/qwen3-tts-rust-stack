@@ -79,4 +79,4 @@ ENV LD_LIBRARY_PATH=/app/runtime:/app/runtime/llama-b7885
 
 EXPOSE 3000
 ENTRYPOINT ["/app/qwen3_tts_server"]
-CMD ["--host", "0.0.0.0", "--port", "3000", "--model-dir", "/app/models", "--quant", "q5_k_m", "--speakers-dir", "/app/speakers", "--threads", "4"]
+CMD ["--host", "0.0.0.0", "--model-dir", "/app/models", "--quant", "q5_k_m", "--speakers-dir", "/app/speakers", "--threads", "4"]
