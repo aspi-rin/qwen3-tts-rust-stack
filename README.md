@@ -42,6 +42,17 @@ The first startup runs the `qwen3-tts-init` prepare service to download Qwen3-TT
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, runtime libs at `/app/runtime`.
 
+## Development
+
+The stack has a small local Rust wrapper for model preparation under `tools/qwen3-tts-prepare`.
+
+```bash
+make fmt-check
+make test
+```
+
+`make test` runs wrapper unit tests without compiling the upstream TTS dependency; the Docker smoke job still validates the real image binary.
+
 ## Build strategy
 
 We do **not** use the official Qwen3-TTS-Rust release binary as the application because upstream `v0.1.6` only packages the one-shot `qwen3_tts` CLI, not `qwen3_tts_server`.

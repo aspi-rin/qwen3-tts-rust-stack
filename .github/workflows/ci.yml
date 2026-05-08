@@ -45,6 +45,24 @@ jobs:
         run: |
           docker build --check -f docker/Dockerfile .
 
+  rust-tools:
+    name: Rust wrapper checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+
+      - name: Check formatting
+        run: make fmt-check
+
+      - name: Run wrapper tests
+        run: make test
+
   cpu-smoke:
     name: CPU server image smoke
     runs-on: ubuntu-latest

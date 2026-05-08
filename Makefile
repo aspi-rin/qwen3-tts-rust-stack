@@ -6,6 +6,8 @@ export
 BACKEND ?= $(or $(QWEN3_TTS_BACKEND),vulkan)
 QUANT ?= $(or $(QWEN3_TTS_QUANT),q5_k_m)
 COMPOSE_CMD ?= docker compose
+CARGO ?= cargo
+PREPARE_MANIFEST := tools/qwen3-tts-prepare/Cargo.toml
 
 COMPOSE_FILES_cpu := -f docker-compose.yml -f docker-compose.cpu.yml
 COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml
@@ -26,7 +28,7 @@ COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
 IMAGE := $(IMAGE_$(BACKEND))
 COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 
-.PHONY: check up down
+.PHONY: check fmt fmt-check test up down
 
 check:
 	@test -f upstream/src/models/onnx.rs || (echo "Missing upstream submodule contents. Run: git submodule update --init --recursive" >&2; exit 2)
@@ -35,6 +37,15 @@ check:
 		cpu) echo "Backend cpu: no GPU passthrough; using upstream Linux Vulkan runtime bundle with CPU fallback" ;; \
 		vulkan) test -e /dev/dri || (echo "Missing /dev/dri for Vulkan backend" >&2; exit 2); echo "Backend vulkan: /dev/dri found" ;; \
 	esac
+
+fmt:
+	$(CARGO) fmt --manifest-path $(PREPARE_MANIFEST)
+
+fmt-check:
+	$(CARGO) fmt --manifest-path $(PREPARE_MANIFEST) -- --check
+
+test:
+	$(CARGO) test --manifest-path $(PREPARE_MANIFEST) --lib --no-default-features
 
 up: check
 	mkdir -p models

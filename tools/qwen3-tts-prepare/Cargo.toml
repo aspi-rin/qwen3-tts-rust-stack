@@ -4,16 +4,21 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[lib]
+path = "src/lib.rs"
+
 [[bin]]
 name = "qwen3_tts_prepare"
 path = "src/main.rs"
+required-features = ["with-upstream"]
 
 [dependencies]
-clap = { version = "4.5", features = ["derive"] }
-qwen3-tts = { path = "../../upstream" }
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+clap = { version = "4.5", features = ["derive"], optional = true }
+qwen3-tts = { path = "../../upstream", optional = true }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"], optional = true }
 
 [features]
-default = []
-vulkan = ["qwen3-tts/vulkan"]
-cuda = ["qwen3-tts/cuda"]
+default = ["with-upstream"]
+with-upstream = ["clap", "qwen3-tts", "tokio"]
+vulkan = ["with-upstream", "qwen3-tts/vulkan"]
+cuda = ["with-upstream", "qwen3-tts/cuda"]

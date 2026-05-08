@@ -1,5 +1,6 @@
 use clap::Parser;
 use qwen3_tts::TtsEngine;
+use qwen3_tts_prepare::validate_quant;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -15,6 +16,8 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+
+    validate_quant(&args.quant)?;
 
     println!("=== Qwen3-TTS Prepare ===");
     println!("Model Dir: {:?}", args.model_dir);
