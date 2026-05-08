@@ -43,6 +43,8 @@ ARG QWEN3_TTS_RUNTIME_VERSION=v0.1.6
 ARG QWEN3_TTS_RUNTIME_ASSET=qwen3-tts-linux-x64-vulkan.tar.gz
 ARG QWEN3_TTS_RUNTIME_SHA256=867bbde32a499a6e9ff380e30ec92a3e1331d6ab9b18a6cdab4f63b4edf6b823
 ARG QWEN3_TTS_RUNTIME_REPO=https://github.com/cgisky1980/Qwen3-TTS-Rust
+ARG ONNXRUNTIME_VERSION=1.23.2
+ARG ONNXRUNTIME_SHA256=1fa4dcaef22f6f7d5cd81b28c2800414350c10116f5fdd46a2160082551c5f9b
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -57,7 +59,13 @@ RUN set -eux; \
     echo "${QWEN3_TTS_RUNTIME_SHA256}  /tmp/qwen3-tts-runtime.tar.gz" | sha256sum -c -; \
     tar -xzf /tmp/qwen3-tts-runtime.tar.gz -C /bundle; \
     rm /tmp/qwen3-tts-runtime.tar.gz; \
-    if [ -d /bundle/runtime/llama-b7885 ]; then cp -a /bundle/runtime/llama-b7885/lib*.so* /bundle/runtime/; fi
+    if [ -d /bundle/runtime/llama-b7885 ]; then cp -a /bundle/runtime/llama-b7885/lib*.so* /bundle/runtime/; fi; \
+    ort_url="https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz"; \
+    curl -L --fail --retry 3 --retry-delay 2 -o /tmp/onnxruntime-linux-x64.tgz "$ort_url"; \
+    echo "${ONNXRUNTIME_SHA256}  /tmp/onnxruntime-linux-x64.tgz" | sha256sum -c -; \
+    tar -xzf /tmp/onnxruntime-linux-x64.tgz -C /tmp; \
+    cp -a /tmp/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}/lib/libonnxruntime*.so* /bundle/runtime/; \
+    rm -rf /tmp/onnxruntime-linux-x64.tgz /tmp/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}
 
 FROM debian:bookworm-slim AS runtime
 

@@ -1,11 +1,13 @@
-# Pinned runtime bundle used by docker/Dockerfile.
+# Pinned runtime assets used by docker/Dockerfile.
 # Application binaries are built from Qwen3-TTS-Rust source at upstream.lock.
-# This bundle is used only to vendor llama.cpp/ONNX runtime shared libraries.
+# Qwen bundle is used to vendor llama.cpp/ggml shared libraries.
 repo=https://github.com/cgisky1980/Qwen3-TTS-Rust
 release_tag=v0.1.6
 linux_vulkan_asset=qwen3-tts-linux-x64-vulkan.tar.gz
 linux_cpu_asset=qwen3-tts-linux-x64-vulkan.tar.gz # upstream has no separate Linux CPU asset; CPU mode runs same server image without GPU passthrough
 linux_vulkan_url=https://github.com/cgisky1980/Qwen3-TTS-Rust/releases/download/v0.1.6/qwen3-tts-linux-x64-vulkan.tar.gz
 sha256=867bbde32a499a6e9ff380e30ec92a3e1331d6ab9b18a6cdab4f63b4edf6b823
+onnxruntime_url=https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-linux-x64-1.23.2.tgz
+onnxruntime_sha256=1fa4dcaef22f6f7d5cd81b28c2800414350c10116f5fdd46a2160082551c5f9b
 observed_at=2026-05-08
-note=The v0.1.6 Linux release only publishes a Vulkan runtime bundle. CPU mode reuses the same runtime bundle without /dev/dri passthrough and relies on llama.cpp/ggml CPU fallback. The asset nests llama.cpp libs under runtime/llama-b7885; docker/Dockerfile flattens lib*.so* into runtime/ for the upstream loader.
+note=The v0.1.6 Linux release only publishes a Vulkan runtime bundle. CPU mode reuses the same runtime bundle without /dev/dri passthrough and relies on llama.cpp/ggml CPU fallback. The asset nests llama.cpp libs under runtime/llama-b7885; docker/Dockerfile flattens lib*.so* into runtime/. ONNX Runtime is replaced with the official Microsoft Linux x64 1.23.2 package to avoid hangs during ORT initialization with the bundled library.
