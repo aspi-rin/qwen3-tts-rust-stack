@@ -21,11 +21,15 @@ COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 
 # Upstream pinned commit currently needs two local build patches:
 # - ort rc.12 SessionBuilder API needs mutable builders.
+# - upstream enables CUDA/DirectML ORT features unconditionally; this stack uses
+#   CPU ONNX Runtime, so drop those features to avoid provider preload issues.
 # - quantized downloads put qwen3_assets.gguf under the quant folder, but
 #   assets are expected to remain F32 under gguf/. Keep these local until
 #   upstream carries fixes.
 RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
  && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
+ && sed -i 's/use ort::execution_providers::DirectMLExecutionProvider;/#[cfg(windows)]\nuse ort::execution_providers::DirectMLExecutionProvider;/' src/models/onnx.rs \
+ && sed -i 's/features = \["ndarray", "load-dynamic", "cuda", "directml"\]/features = ["ndarray", "load-dynamic"]/' Cargo.toml \
  && sed -i '/qwen3_assets.gguf/,+1 s@format!("{}/qwen3_assets.gguf", quant_folder)@"gguf/qwen3_assets.gguf".to_owned()@g' src/download.rs \
  && sed -i 's@let runtime_dir = PathBuf::from("runtime");@let runtime_dir = PathBuf::from(std::env::var("QWEN3_TTS_RUNTIME_DIR").unwrap_or_else(|_| "/app/runtime".to_string()));@' src/models/onnx.rs \
  && sed -i '/let env_builder =/i\    std::env::set_var("ORT_DYLIB_PATH", &dll_path);\n    println!("  [ONNX] ORT_DYLIB_PATH={}", dll_path.display());' src/models/onnx.rs
