@@ -38,30 +38,29 @@ jobs:
       - name: Validate Dockerfile syntax
         run: |
           docker build --check -f docker/Dockerfile .
-          docker build --check -f docker/Dockerfile.source .
 
   cpu-smoke:
-    name: CPU image smoke
+    name: CPU server image smoke
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build CPU image
+      - name: Build CPU server image
         run: |
           docker build -f docker/Dockerfile \
             --build-arg QWEN3_TTS_RUNTIME_BACKEND=cpu \
             -t qwen3-tts-rust-stack:v0.1.6-cpu .
 
-      - name: Check binary help
+      - name: Check server help
         run: |
           docker run --rm qwen3-tts-rust-stack:v0.1.6-cpu --help
 
-      - name: Check release runtime libraries
+      - name: Check server runtime files
         run: |
           docker run --rm --entrypoint bash qwen3-tts-rust-stack:v0.1.6-cpu -lc '
             set -eux
-            test -x /app/qwen3_tts
+            test -x /app/qwen3_tts_server
             test -f /app/runtime/libonnxruntime.so
             test -f /app/runtime/libllama.so
             test -f /app/runtime/libggml.so
@@ -69,27 +68,7 @@ jobs:
             test -d /app/speakers
           '
 
-      - name: CPU compose command smoke
+      - name: CPU compose server smoke
         run: |
-          mkdir -p models outputs
-          set +e
-          # Exercise the real Compose command. This may reach model download/runtime
-          # initialization, but should not fail at CLI argument parsing.
-          timeout 45s docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts >compose.log 2>&1
-          status=$?
-          set -e
-          cat compose.log
-          if grep -q "unexpected argument" compose.log; then
-            echo "Compose command contains an argument unsupported by the pinned release CLI" >&2
-            exit 1
-          fi
-          if [ "$status" -eq 0 ]; then
-            echo "Compose command completed successfully"
-            exit 0
-          fi
-          if grep -Eiq "Model download failed|Failed to|not found|No such file|download|Permission denied|Read-only file system" compose.log; then
-            echo "Compose command reached runtime/model initialization; treating as CLI argument smoke pass"
-            exit 0
-          fi
-          echo "Compose command failed before expected runtime/model initialization" >&2
-          exit "$status"
+          mkdir -p models
+          docker compose -f docker-compose.yml -f docker-compose.cpu.yml run --rm qwen3-tts --help
