@@ -48,7 +48,6 @@ BACKEND=cpu make run      # 不挂 GPU 设备；复用 Linux Vulkan release 的 
 | --- | --- | --- |
 | `QWEN3_TTS_BACKEND` | `vulkan` | `vulkan` passes `/dev/dri`; `cpu` does not. |
 | `QWEN3_TTS_QUANT` | `q5_k_m` | Qwen3-TTS quantization helper. |
-| `QWEN3_TTS_SPEAKER` | `vivian` | Built-in speaker name. |
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, outputs at `/app/outputs`.
 

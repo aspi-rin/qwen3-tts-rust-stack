@@ -13,6 +13,6 @@ services:
       - --model-dir=/app/models
       - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
       - --speakers-dir=/app/speakers
-      - --speaker=${QWEN3_TTS_SPEAKER:-vivian}
+      - --speaker=vivian
       - --text=你好，我是本地语音合成服务。
       - --output=/app/outputs/speech.wav
