@@ -54,13 +54,6 @@ schema but can return `unsupported_feature_error` until encoder support exists.
 
 ## Local model and voice mapping
 
-The request schema follows OpenAI's TTS request shape. Local Qwen model/voice
-selection should be implemented by adapter configuration, for example:
-
-```text
-OpenAI model gpt-4o-mini-tts -> local upstream qwen3-tts
-OpenAI voice alloy           -> local speaker vivian
-```
-
-Do not expand the strict request schema for local aliases unless we explicitly
-choose to expose a non-OpenAI extension.
+The request schema follows OpenAI's TTS request shape, but model and voice
+values are local Qwen3 identifiers. We intentionally do not pretend to expose
+OpenAI model or voice inventories.

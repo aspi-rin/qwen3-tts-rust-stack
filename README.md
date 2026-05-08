@@ -119,7 +119,7 @@ OpenAI-compatible examples:
 ```bash
 curl -N http://127.0.0.1:9746/v1/audio/speech \
   -H 'Content-Type: application/json' \
-  -d '{"model":"gpt-4o-mini-tts","input":"你好，这是 OpenAI 兼容接口测试。","voice":{"id":"vivian"},"response_format":"pcm"}' \
+  -d '{"model":"qwen3-tts","input":"你好，这是 OpenAI 兼容接口测试。","voice":"vivian","response_format":"pcm"}' \
   -o /tmp/qwen3-openai.s16le.pcm
 
 aplay -f S16_LE -r 24000 -c 1 /tmp/qwen3-openai.s16le.pcm

@@ -90,10 +90,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleModels(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, compat.ModelList{Object: "list", Data: []compat.Model{
-		{ID: "tts-1", Object: "model", Created: 0, OwnedBy: "openai-compatible-local"},
-		{ID: "tts-1-hd", Object: "model", Created: 0, OwnedBy: "openai-compatible-local"},
-		{ID: "gpt-4o-mini-tts", Object: "model", Created: 0, OwnedBy: "openai-compatible-local"},
-		{ID: "gpt-4o-mini-tts-2025-12-15", Object: "model", Created: 0, OwnedBy: "openai-compatible-local"},
+		{ID: "qwen3-tts", Object: "model", Created: 0, OwnedBy: "local"},
 	}})
 }
 

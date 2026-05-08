@@ -13,9 +13,9 @@ The stack adapter exposes OpenAI-compatible `/v1/*` routes and bypasses Qwen-nat
 
 ```json
 {
-  "model": "gpt-4o-mini-tts",
+  "model": "qwen3-tts",
   "input": "你好，我是本地语音合成服务。",
-  "voice": {"id": "vivian"},
+  "voice": "vivian",
   "response_format": "pcm",
   "instructions": "自然、清晰"
 }
@@ -44,9 +44,9 @@ Content-Type: application/json
 | OpenAI 风格字段 | Qwen3-TTS-Rust 字段 |
 | --- | --- |
 | `input` | CLI/API `text` |
-| `voice` | OpenAI voice -> 默认 speaker；`{"id":"vivian"}` -> Qwen speaker |
+| `voice` | Qwen speaker；也支持 `{"id":"vivian"}` |
 | `response_format` | pcm/wav 输出选择 |
-| `model` | OpenAI model enum -> 本地 Qwen3-TTS |
+| `model` | 本地 `qwen3-tts` |
 | `instructions` | `instruction` |
 ## Adapter implementation plan
 

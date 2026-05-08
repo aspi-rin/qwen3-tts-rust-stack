@@ -12,7 +12,7 @@ func decode(t *testing.T, body string) (SpeechRequest, *Error) {
 }
 
 func TestDecodeSpeechRequestDefaults(t *testing.T) {
-	req, err := decode(t, `{"model":"gpt-4o-mini-tts","input":"hello","voice":"alloy"}`)
+	req, err := decode(t, `{"model":"qwen3-tts","input":"hello","voice":"vivian"}`)
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -25,14 +25,14 @@ func TestDecodeSpeechRequestDefaults(t *testing.T) {
 }
 
 func TestDecodeSpeechRequestRejectsUnknownField(t *testing.T) {
-	_, err := decode(t, `{"model":"gpt-4o-mini-tts","input":"hello","voice":"alloy","seed":42}`)
+	_, err := decode(t, `{"model":"qwen3-tts","input":"hello","voice":"vivian","seed":42}`)
 	if err == nil {
 		t.Fatal("expected unknown field error")
 	}
 }
 
 func TestDecodeSpeechRequestCustomVoiceID(t *testing.T) {
-	req, err := decode(t, `{"model":"gpt-4o-mini-tts","input":"hello","voice":{"id":"vivian"},"response_format":"pcm"}`)
+	req, err := decode(t, `{"model":"qwen3-tts","input":"hello","voice":{"id":"vivian"},"response_format":"pcm"}`)
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}

@@ -15,9 +15,9 @@ Required fields:
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `model` | string enum | `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`, `gpt-4o-mini-tts-2025-12-15`. |
+| `model` | string enum | `qwen3-tts`. |
 | `input` | string | Text to synthesize; max 4096 chars. |
-| `voice` | string enum or `{ "id": string }` | OpenAI built-in voice or custom voice object shape. |
+| `voice` | string enum or `{ "id": string }` | Local Qwen3 speaker, e.g. `vivian`. |
 
 Optional fields:
 
@@ -30,8 +30,8 @@ Optional fields:
 
 ## First implementation policy
 
-The schema fixes the OpenAI-compatible request shape. Local Qwen speaker mapping
-should be handled by adapter configuration, not by expanding this request schema.
+The schema fixes the OpenAI-compatible request shape while using local Qwen3
+model and speaker identifiers.
 The first adapter implementation may still reject unsupported runtime
 combinations with a clear OpenAI-style 4xx error.
 
@@ -48,13 +48,13 @@ Planned first-pass support:
 
 ## Pipecat compatibility target
 
-Pipecat's `OpenAITTSService` uses OpenAI's speech endpoint with:
+Pipecat-style clients use this speech endpoint shape with local model/voice values:
 
 ```json
 {
   "input": "...",
-  "model": "gpt-4o-mini-tts",
-  "voice": "alloy",
+  "model": "qwen3-tts",
+  "voice": "vivian",
   "response_format": "pcm",
   "instructions": "optional",
   "speed": 1.0

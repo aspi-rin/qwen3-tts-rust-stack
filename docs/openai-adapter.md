@@ -77,9 +77,9 @@ Minimal OpenAI-style model list:
   "object": "list",
   "data": [
     {
-      "id": "gpt-4o-mini-tts",
+      "id": "qwen3-tts",
       "object": "model",
-      "owned_by": "openai-compatible-local"
+      "owned_by": "local"
     }
   ]
 }
@@ -91,9 +91,9 @@ Request shape:
 
 ```json
 {
-  "model": "gpt-4o-mini-tts",
+  "model": "qwen3-tts",
   "input": "你好，我是本地语音合成服务。",
-  "voice": {"id": "vivian"},
+  "voice": "vivian",
   "response_format": "pcm",
   "speed": 1.0,
   "instructions": "自然、清晰"
@@ -104,9 +104,9 @@ First version semantics:
 
 | Field | Behavior |
 | --- | --- |
-| `model` | Required; accepts the pinned OpenAI model enum and maps to local Qwen3-TTS. |
+| `model` | Required; accepts the local `qwen3-tts` model id. |
 | `input` | Required; maps to upstream `text`. |
-| `voice` | Required; OpenAI built-in voices map to the configured default speaker; `{"id": "vivian"}` maps directly to a Qwen speaker. |
+| `voice` | Required; Local Qwen speaker strings map directly; `{"id": "vivian"}` is also accepted. |
 | `response_format` | `pcm` or `wav` supported initially; other pinned OpenAI formats return `unsupported_feature_error`. |
 | `speed` | Accepted for client compatibility; ignored initially. |
 | `instructions` | Optional; forwarded to upstream `instruction`. |
@@ -214,9 +214,9 @@ WAV:
 curl -sS http://127.0.0.1:9746/v1/audio/speech \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini-tts",
+    "model": "qwen3-tts",
     "input": "你好，这是 OpenAI 风格接口测试。",
-    "voice": {"id": "vivian"},
+    "voice": "vivian",
     "response_format": "wav"
   }' \
   -o /tmp/qwen3-openai.wav
@@ -228,9 +228,9 @@ PCM streaming:
 curl -N http://127.0.0.1:9746/v1/audio/speech \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini-tts",
+    "model": "qwen3-tts",
     "input": "你好，这是流式 PCM 测试。",
-    "voice": {"id": "vivian"},
+    "voice": "vivian",
     "response_format": "pcm"
   }' \
   -o /tmp/qwen3-openai.s16le.pcm

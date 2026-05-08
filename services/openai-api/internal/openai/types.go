@@ -8,15 +8,12 @@ import (
 )
 
 var AllowedModels = map[string]struct{}{
-	"tts-1":                      {},
-	"tts-1-hd":                   {},
-	"gpt-4o-mini-tts":            {},
-	"gpt-4o-mini-tts-2025-12-15": {},
+	"qwen3-tts": {},
 }
 
 var AllowedVoices = map[string]struct{}{
-	"alloy": {}, "ash": {}, "ballad": {}, "cedar": {}, "coral": {}, "echo": {}, "fable": {},
-	"marin": {}, "nova": {}, "onyx": {}, "sage": {}, "shimmer": {}, "verse": {},
+	"ryan": {}, "aiden": {}, "sohee": {}, "eric": {}, "uncle_fu": {},
+	"serena": {}, "ono_anna": {}, "vivian": {}, "dylan": {},
 }
 
 var AllowedFormats = map[string]struct{}{
@@ -115,6 +112,9 @@ func (r *SpeechRequest) Validate() *Error {
 func (r SpeechRequest) UpstreamSpeaker(defaultSpeaker string) string {
 	if r.Voice.ID != "" {
 		return r.Voice.ID
+	}
+	if r.Voice.Name != "" {
+		return r.Voice.Name
 	}
 	return defaultSpeaker
 }

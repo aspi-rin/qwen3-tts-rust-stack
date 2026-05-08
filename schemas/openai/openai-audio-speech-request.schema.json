@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai/openai-audio-speech-request.schema.json",
   "title": "OpenAI-compatible Create speech request",
-  "description": "Request body schema for POST /v1/audio/speech, pinned from the OpenAI Create speech API shape for this stack's compatibility layer.",
+  "description": "Request body schema for POST /v1/audio/speech. The adapter uses the OpenAI Create speech request shape, but model and voice enums are local Qwen3-TTS identifiers.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,33 +20,26 @@
     "model": {
       "type": "string",
       "enum": [
-        "tts-1",
-        "tts-1-hd",
-        "gpt-4o-mini-tts",
-        "gpt-4o-mini-tts-2025-12-15"
+        "qwen3-tts"
       ],
-      "description": "TTS model identifier documented by OpenAI for Create speech."
+      "description": "Local Qwen3-TTS model identifier."
     },
     "voice": {
       "oneOf": [
         {
           "type": "string",
           "enum": [
-            "alloy",
-            "ash",
-            "ballad",
-            "cedar",
-            "coral",
-            "echo",
-            "fable",
-            "marin",
-            "nova",
-            "onyx",
-            "sage",
-            "shimmer",
-            "verse"
+            "ryan",
+            "aiden",
+            "sohee",
+            "eric",
+            "uncle_fu",
+            "serena",
+            "ono_anna",
+            "vivian",
+            "dylan"
           ],
-          "description": "OpenAI built-in voice name."
+          "description": "Local Qwen3 speaker name."
         },
         {
           "type": "object",
@@ -58,12 +51,12 @@
             "id": {
               "type": "string",
               "minLength": 1,
-              "description": "Custom voice identifier."
+              "description": "Local Qwen3 speaker identifier."
             }
           }
         }
       ],
-      "description": "Voice to use when generating audio: an OpenAI built-in voice or custom voice object."
+      "description": "Local Qwen3 speaker to use when generating audio, either as a string or custom voice object shape."
     },
     "instructions": {
       "type": "string",
