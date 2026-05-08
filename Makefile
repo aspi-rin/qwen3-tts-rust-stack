@@ -26,7 +26,7 @@ COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
 IMAGE := $(IMAGE_$(BACKEND))
 COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 
-.PHONY: check build-image run down clean
+.PHONY: check up down clean
 
 check:
 	@$(COMPOSE_CMD) version >/dev/null 2>&1 || (echo "Compose command failed: $(COMPOSE_CMD). Install Docker Compose plugin or run with COMPOSE_CMD=docker-compose" >&2; exit 2)
@@ -35,13 +35,11 @@ check:
 		vulkan) test -e /dev/dri || (echo "Missing /dev/dri for Vulkan backend" >&2; exit 2); echo "Backend vulkan: /dev/dri found" ;; \
 	esac
 
-build-image:
+up: check
+	mkdir -p models outputs
 	docker build -f docker/Dockerfile \
 		--build-arg QWEN3_TTS_RUNTIME_BACKEND=$(BACKEND) \
 		-t $(IMAGE) .
-
-run: check
-	mkdir -p models outputs
 	$(COMPOSE) run --rm qwen3-tts
 
 down:

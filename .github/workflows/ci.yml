@@ -26,8 +26,7 @@ jobs:
       - name: Validate Makefile dry-runs
         run: |
           make -n check BACKEND=cpu
-          make -n build-image BACKEND=cpu
-          make -n run BACKEND=cpu
+          make -n up BACKEND=cpu
           make -n down BACKEND=cpu
           make -n clean
 
@@ -49,7 +48,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build CPU image
-        run: BACKEND=cpu make build-image
+        run: |
+          docker build -f docker/Dockerfile \
+            --build-arg QWEN3_TTS_RUNTIME_BACKEND=cpu \
+            -t qwen3-tts-rust-stack:v0.1.6-cpu .
 
       - name: Check binary help
         run: |

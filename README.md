@@ -26,18 +26,18 @@ Requirements: Linux, Docker with Compose plugin.
 
 ```bash
 cp .env.example .env
-make build-image
-make run
+make up        # builds the local release image if needed, then runs one TTS generation
+make down      # clean up Compose resources
 ```
 
 默认 `BACKEND=vulkan`，会把 `/dev/dri` 暴露给容器。可选 backend：
 
 ```bash
-BACKEND=vulkan make run   # 挂载 /dev/dri；AMD/Intel/NVIDIA Vulkan 路线
-BACKEND=cpu make run      # 不挂 GPU 设备；复用 Linux Vulkan release 的 CPU fallback
+BACKEND=vulkan make up   # 挂载 /dev/dri；AMD/Intel/NVIDIA Vulkan 路线
+BACKEND=cpu make up      # 不挂 GPU 设备；复用 Linux Vulkan release 的 CPU fallback
 ```
 
-首次运行会自动下载模型，耗时取决于网络。`make run` 会自动创建 `models/` 和 `outputs/`，并执行一条固定的 CLI smoke 合成，结果写到 `outputs/speech.wav`。
+首次运行会自动下载模型，耗时取决于网络。`make up` 会自动创建 `models/` 和 `outputs/`，并执行一条固定的 CLI smoke 合成，结果写到 `outputs/speech.wav`。
 
 
 ## Configuration
@@ -58,9 +58,8 @@ Container-internal paths are fixed: models at `/app/models`, speakers at `/app/s
 注意：上游 `v0.1.6` 只发布了 Linux Vulkan asset；CPU 模式暂时复用该 asset，但不做 GPU passthrough，依赖 llama.cpp/ggml CPU fallback。
 
 ```bash
-BACKEND=vulkan make build-image   # 基于官方 Linux Vulkan release binary 构建镜像
-BACKEND=vulkan make run           # 使用 Compose 执行一次合成任务
-make down                         # 清理 Compose 资源
+BACKEND=vulkan make up   # 构建本地 release image，并使用 Compose 执行一次合成任务
+make down                # 清理 Compose 资源
 ```
 
 如果在 AMD GPU 主机上运行，建议确认宿主机可用：
