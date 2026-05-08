@@ -26,6 +26,9 @@ COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 # - quantized downloads put qwen3_assets.gguf under the quant folder, but
 #   assets are expected to remain F32 under gguf/. Keep these local until
 #   upstream carries fixes.
+# - upstream verifies the Windows Vulkan backend filename on every platform;
+#   check the platform-correct shared object so container logs make Vulkan
+#   backend failures obvious.
 RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
  && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
  && sed -i 's/use ort::execution_providers::DirectMLExecutionProvider;/#[cfg(windows)]\nuse ort::execution_providers::DirectMLExecutionProvider;/' src/models/onnx.rs \
@@ -33,7 +36,13 @@ RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = b
  && sed -i 's/features = \["ndarray", "load-dynamic", "cuda", "directml"\]/features = ["ndarray", "load-dynamic"]/' Cargo.toml \
  && sed -i '/qwen3_assets.gguf/,+1 s@format!("{}/qwen3_assets.gguf", quant_folder)@"gguf/qwen3_assets.gguf".to_owned()@g' src/download.rs \
  && sed -i 's@let runtime_dir = PathBuf::from("runtime");@let runtime_dir = PathBuf::from(std::env::var("QWEN3_TTS_RUNTIME_DIR").unwrap_or_else(|_| "/app/runtime".to_string()));@' src/models/onnx.rs \
- && sed -i '/let env_builder =/i\    std::env::set_var("ORT_DYLIB_PATH", &dll_path);\n    println!("  [ONNX] ORT_DYLIB_PATH={}", dll_path.display());' src/models/onnx.rs
+ && sed -i '/let env_builder =/i\    std::env::set_var("ORT_DYLIB_PATH", &dll_path);\n    println!("  [ONNX] ORT_DYLIB_PATH={}", dll_path.display());' src/models/onnx.rs \
+ && sed -i 's@let vulkan_path = runtime_path.join("ggml-vulkan.dll");@let vulkan_name = if cfg!(target_os = "windows") { "ggml-vulkan.dll" } else if cfg!(target_os = "macos") { "libggml-metal.dylib" } else { "libggml-vulkan.so" };\
+            let vulkan_path = runtime_path.join(vulkan_name);@' src/models/llama/mod.rs \
+ && sed -i '/match libloading::Library::new(&vulkan_path)/,+3 c\            match libloading::Library::new(&vulkan_path) {\
+                Ok(_) => println!("  [System] Verified: {} is loadable.", vulkan_name),\
+                Err(e) => eprintln!("  [System] WARNING: {} is NOT loadable: {}. This usually means missing Vulkan drivers or runtime.", vulkan_name, e),\
+            }' src/models/llama/mod.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
@@ -72,18 +81,22 @@ RUN set -eux; \
     cp -a /tmp/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}/lib/libonnxruntime*.so* /bundle/runtime/; \
     rm -rf /tmp/onnxruntime-linux-x64.tgz /tmp/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}
 
-FROM debian:bookworm-slim AS runtime
+# The final runtime uses Debian trixie so mesa-vulkan-drivers is new enough for
+# recent AMD GPUs. Debian bookworm's Mesa can report newer cards as
+# "amdgpu: unknown", which prevents the Vulkan backend from loading.
+FROM debian:trixie-slim AS runtime
 
 ARG QWEN3_TTS_RUNTIME_BACKEND=vulkan
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
-    libasound2 \
+    libasound2t64 \
     libgomp1 \
-    libssl3 \
+    libssl3t64 \
     libstdc++6 \
     mesa-vulkan-drivers \
+    vulkan-tools \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

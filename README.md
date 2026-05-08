@@ -73,6 +73,17 @@ curl -fsS http://127.0.0.1:9746/health
 curl -fsS http://127.0.0.1:9746/api/speakers
 ```
 
+For Vulkan deployments, confirm the container loaded the Linux Vulkan backend
+and that llama.cpp assigned layers to a GPU device:
+
+```bash
+docker logs qwen3-tts-server 2>&1 | grep -Ei 'vulkan|backend|offload|assigned to device'
+```
+
+The runtime image uses Debian trixie for newer Mesa Vulkan drivers. Debian
+bookworm's Mesa can fail to recognize newer AMD GPUs and silently fall back to
+CPU-heavy execution.
+
 For streaming, use the upstream WebSocket endpoint:
 
 ```text
