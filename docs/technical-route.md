@@ -31,7 +31,7 @@ Qwen3-TTS-Rust source
 2. 验证 Vulkan backend 是否生效。
 3. 验证 upstream WebSocket streaming TTS。
 4. 测试中文质量、TTFB、RTF、稳定性。
-5. 达标后再封 OpenAI 风格 `/v1/audio/speech`。
+5. 达标后再通过 stack 层 Go adapter 封 OpenAI 风格 `/v1/audio/speech`，保持 upstream source pure。
 6. 最后接入上层系统。
 
 ## 验证矩阵

@@ -49,3 +49,8 @@ Accept: audio/pcm
 | `voice` | speaker name 或 voice file |
 | `response_format` | pcm/wav 输出选择 |
 | `model` | 固定 `qwen3-tts`，后续可映射 quant/backend |
+## Adapter implementation plan
+
+The current plan is documented in [`openai-adapter.md`](./openai-adapter.md).
+The compatibility layer should be implemented as a separate Go service in the
+stack, not as upstream `Qwen3-TTS-Rust` source changes.
