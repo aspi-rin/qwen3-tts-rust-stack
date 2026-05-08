@@ -21,6 +21,8 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./models:/app/models:Z
+    environment:
+      QWEN3_TTS_DEBUG_LOGS: ${QWEN3_TTS_DEBUG_LOGS:-0}
     security_opt:
       - no-new-privileges:true
     tmpfs:

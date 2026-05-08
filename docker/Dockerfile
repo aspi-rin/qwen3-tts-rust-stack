@@ -78,8 +78,9 @@ COPY --from=builder /tmp/qwen3_tts_server /app/qwen3_tts_server
 COPY --from=builder /tmp/qwen3_tts_model_download /app/qwen3_tts_model_download
 COPY --from=builder /build/upstream/speakers /app/speakers
 COPY --from=runtime-bundle /bundle/runtime /app/runtime
+COPY docker/qwen3_tts_entrypoint.sh /app/qwen3_tts_entrypoint
 
-RUN chmod +x /app/qwen3_tts_server /app/qwen3_tts_model_download \
+RUN chmod +x /app/qwen3_tts_server /app/qwen3_tts_model_download /app/qwen3_tts_entrypoint \
  && mkdir -p /app/models
 
 ENV QWEN3_TTS_BACKEND=${QWEN3_TTS_RUNTIME_BACKEND}
@@ -87,7 +88,8 @@ ENV RUST_LOG=info
 ENV LD_LIBRARY_PATH=/app/runtime:/app/runtime/llama-b7885
 ENV QWEN3_TTS_RUNTIME_DIR=/app/runtime
 ENV ORT_DYLIB_PATH=/app/runtime/libonnxruntime.so
+ENV QWEN3_TTS_DEBUG_LOGS=0
 
 EXPOSE 3000
-ENTRYPOINT ["/app/qwen3_tts_server"]
+ENTRYPOINT ["/app/qwen3_tts_entrypoint"]
 CMD ["--host", "0.0.0.0", "--model-dir", "/app/models", "--quant", "q5_k_m", "--speakers-dir", "/app/speakers", "--threads", "4"]

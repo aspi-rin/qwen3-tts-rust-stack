@@ -125,6 +125,7 @@ jobs:
             set -eux
             test -x /app/qwen3_tts_server
             test -x /app/qwen3_tts_model_download
+            test -x /app/qwen3_tts_entrypoint
             test -f /app/runtime/libonnxruntime.so
             test -f /app/runtime/libllama.so
             test -f /app/runtime/libggml.so

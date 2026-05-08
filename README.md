@@ -41,8 +41,16 @@ The first startup runs the `qwen3-tts-model-download` model download service to 
 | --- | --- | --- |
 | `QWEN3_TTS_BACKEND` | `vulkan` | `vulkan` passes `/dev/dri`; `cpu` does not. |
 | `QWEN3_TTS_QUANT` | `q5_k_m` | Qwen3-TTS quantization helper: `none`, `q5_k_m`, or `q8_0`. |
+| `QWEN3_TTS_DEBUG_LOGS` | `0` | Set to `1`/`true`/`on` to keep verbose upstream debug logs; default filters noisy debug lines. |
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, runtime libs at `/app/runtime`.
+
+`QWEN3_TTS_DEBUG_LOGS=0` keeps upstream source unchanged and filters known noisy `Debug:` / `[Debug]` lines at container entrypoint level. To temporarily inspect upstream verbose logs:
+
+```bash
+QWEN3_TTS_DEBUG_LOGS=1 make up
+# or edit .env and set QWEN3_TTS_DEBUG_LOGS=1, then recreate the service
+```
 
 ## Development
 
