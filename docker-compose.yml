@@ -1,6 +1,6 @@
 services:
   qwen3-tts:
-    image: qwen3-tts-rust-stack:v0.1.6-vulkan
+    image: ${QWEN3_TTS_IMAGE:-qwen3-tts-rust-stack:v0.1.6-vulkan}
     container_name: qwen3-tts
     volumes:
       - ./models:/app/models:Z
