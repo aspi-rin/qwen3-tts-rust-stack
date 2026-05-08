@@ -12,7 +12,6 @@ services:
     command:
       - --model-dir=${QWEN3_TTS_MODEL_DIR:-/app/models}
       - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
-      - --threads=${QWEN3_TTS_THREADS:-4}
       - --speakers-dir=${QWEN3_TTS_SPEAKERS_DIR:-/app/speakers}
       - --speaker=${QWEN3_TTS_SPEAKER:-vivian}
       - --text=${QWEN3_TTS_INPUT:-你好，我是本地语音合成服务。}

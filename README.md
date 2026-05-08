@@ -88,6 +88,7 @@ Content-Type: application/json
 ## 重要说明
 
 - 默认 Docker 镜像使用官方 release asset；如需从源码构建，可手动使用 `docker/Dockerfile.source`。
+- Pinned release `v0.1.6` 的 CLI 不支持 `--threads`；Compose 参数需以 `release.lock` 固定的 release `--help` 为准。
 - 开发机可能没有 GPU，因此可用 `BACKEND=cpu` 跳过 GPU passthrough；性能仍需在目标 GPU 机器上确认。
 - 上游 README 声称 Linux/Windows 默认 Vulkan，macOS 默认 Metal；实际是否生效需在目标机器验证 runtime 日志和 RTF。
 - 上游当前也包含 `qwen3_tts_server`，但先不要把它视为最终服务 API；本轮先用 CLI 验证路线。
