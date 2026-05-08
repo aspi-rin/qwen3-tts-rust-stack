@@ -23,7 +23,7 @@ COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml
 COMPOSE_FILES := $(COMPOSE_FILES_$(BACKEND))
 COMPOSE := QWEN3_TTS_IMAGE=$(IMAGE) $(COMPOSE_CMD) $(COMPOSE_FILES)
 
-.PHONY: check build-image run down check-vulkan clean
+.PHONY: check build-image run down clean
 
 check:
 	@$(COMPOSE_CMD) version >/dev/null 2>&1 || (echo "Compose command failed: $(COMPOSE_CMD). Install Docker Compose plugin or run with COMPOSE_CMD=docker-compose" >&2; exit 2)
@@ -38,13 +38,11 @@ build-image:
 		-t $(IMAGE) .
 
 run: check
+	mkdir -p models outputs
 	$(COMPOSE) run --rm qwen3-tts
 
 down:
 	$(COMPOSE) down
 
-check-vulkan:
-	./scripts/verify_vulkan.sh
-
 clean:
-	rm -rf outputs/*
+	rm -rf outputs

@@ -21,7 +21,6 @@ WORKDIR /app
 COPY --from=builder /usr/local/bin/qwen3_tts /usr/local/bin/qwen3_tts
 COPY --from=builder /usr/local/bin/qwen3_tts_server /usr/local/bin/qwen3_tts_server
 COPY --from=builder /build/upstream/speakers /app/speakers
-COPY scripts /app/scripts
 RUN mkdir -p /app/models /app/outputs
 ENV RUST_LOG=info
 ENV MODEL_DIR=/app/models

@@ -35,7 +35,6 @@ RUN set -eux; \
     chmod +x /app/qwen3_tts; \
     mkdir -p /app/models /app/outputs
 
-COPY scripts /app/scripts
 
 ENV QWEN3_TTS_BACKEND=${QWEN3_TTS_RUNTIME_BACKEND}
 ENV RUST_LOG=info

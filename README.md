@@ -37,7 +37,7 @@ BACKEND=vulkan make run   # 挂载 /dev/dri；AMD/Intel/NVIDIA Vulkan 路线
 BACKEND=cpu make run      # 不挂 GPU 设备；复用 Linux Vulkan release 的 CPU fallback
 ```
 
-首次运行会自动下载模型，耗时取决于网络。生成结果默认写到 `outputs/speech.wav`。
+首次运行会自动下载模型，耗时取决于网络。`make run` 会自动创建 `models/` 和 `outputs/`，生成结果默认写到 `outputs/speech.wav`。
 
 ## Docker 构建与运行
 
@@ -55,17 +55,6 @@ make down                         # 清理 Compose 资源
 
 ```bash
 vulkaninfo --summary
-```
-
-容器侧 Vulkan 环境检查：
-
-```bash
-docker run --rm --device=/dev/dri \
-  --entrypoint bash \
-  -v "$PWD/models:/app/models" \
-  -v "$PWD/outputs:/app/outputs" \
-  qwen3-tts-rust-stack:v0.1.6-vulkan \
-  /app/scripts/verify_vulkan.sh
 ```
 
 ## 初步通过标准

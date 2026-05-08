@@ -36,10 +36,10 @@ Qwen3-TTS
 
 | 项目 | 方法 | 通过标准 |
 | --- | --- | --- |
-| CLI 可运行 | `scripts/run_cli.sh` | 生成有效 WAV |
-| Vulkan 可见 | `scripts/verify_vulkan.sh` | `vulkaninfo` 可列出 GPU，runtime 下载/加载 Vulkan 版本 |
+| CLI 可运行 | `make run` | 生成有效 WAV |
+| Vulkan 可见 | 宿主机 `vulkaninfo --summary` + `BACKEND=vulkan make run` | `/dev/dri` 可见，runtime 日志/RTF 符合预期 |
 | 中文质量 | 人工听测 | 无明显吞字/重复/爆音 |
-| RTF | `scripts/benchmark_cli.py` | 初步 `< 1.0`，理想 `< 0.5` |
+| RTF | 多次执行 `make run` 并记录生成耗时/音频时长 | 初步 `< 1.0`，理想 `< 0.5` |
 | 稳定性 | 连续多轮生成 | 多轮不崩溃，输出长度合理 |
 | 流式潜力 | 检查上游 streaming API / WebSocket | 能输出分块 PCM/f32 样本 |
 

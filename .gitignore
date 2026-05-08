@@ -3,7 +3,6 @@
 /models/*
 /outputs/*
 !/models/.gitkeep
-!/outputs/.gitkeep
 *.wav
 *.pcm
 *.log
