@@ -29,6 +29,7 @@ COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 .PHONY: check up down
 
 check:
+	@test -f upstream/src/models/onnx.rs || (echo "Missing upstream submodule contents. Run: git submodule update --init --recursive" >&2; exit 2)
 	@$(COMPOSE_CMD) version >/dev/null 2>&1 || (echo "Compose command failed: $(COMPOSE_CMD). Install Docker Compose plugin or run with COMPOSE_CMD=docker-compose" >&2; exit 2)
 	@case "$(BACKEND)" in \
 		cpu) echo "Backend cpu: no GPU passthrough; using upstream Linux Vulkan runtime bundle with CPU fallback" ;; \

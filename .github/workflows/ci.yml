@@ -25,11 +25,16 @@ jobs:
         with:
           submodules: true
 
-      - name: Validate Makefile dry-runs
+      - name: Validate Makefile checks
         run: |
-          make -n check BACKEND=cpu
+          make check BACKEND=cpu
           make -n up BACKEND=cpu
           make -n down BACKEND=cpu
+
+      - name: Validate upstream submodule checkout
+        run: |
+          test -f upstream/src/models/onnx.rs
+          test "$(git -C upstream rev-parse HEAD)" = "32ed8f03c1ca9fbdcb3a888cb4006ca10ccfc74e"
 
       - name: Validate Compose config
         run: |
