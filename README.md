@@ -42,8 +42,11 @@ The first startup runs the `qwen3-tts-model-download` model download service to 
 | `QWEN3_TTS_BACKEND` | `vulkan` | `vulkan` passes `/dev/dri`; `cpu` does not. |
 | `QWEN3_TTS_QUANT` | `q5_k_m` | Qwen3-TTS quantization helper: `none`, `q5_k_m`, or `q8_0`. |
 | `QWEN3_TTS_DEBUG_LOGS` | `0` | Set to `1`/`true`/`on` to keep verbose upstream debug logs; default filters noisy debug lines. |
+| `QWEN3_TTS_BIND_HOST` | `127.0.0.1` | Host interface for the public adapter port; set `0.0.0.0` to expose it to reverse proxies or the LAN. |
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, runtime libs at `/app/runtime`.
+
+To expose the adapter beyond localhost, set `QWEN3_TTS_BIND_HOST=0.0.0.0` in `.env` and recreate the stack. The public service remains on port `9746`.
 
 `QWEN3_TTS_DEBUG_LOGS=0` keeps upstream source unchanged and filters known noisy `Debug:` / `[Debug]` lines at container entrypoint level. To temporarily inspect upstream verbose logs:
 

@@ -50,7 +50,7 @@ services:
       qwen3-tts-server:
         condition: service_healthy
     ports:
-      - "127.0.0.1:9746:8080"
+      - "${QWEN3_TTS_BIND_HOST:-127.0.0.1}:9746:8080"
     security_opt:
       - no-new-privileges:true
     tmpfs:
