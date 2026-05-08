@@ -1,5 +1,5 @@
 [package]
-name = "qwen3-tts-prepare"
+name = "qwen3-tts-model-download"
 version = "0.1.0"
 edition = "2021"
 publish = false
@@ -8,7 +8,7 @@ publish = false
 path = "src/lib.rs"
 
 [[bin]]
-name = "qwen3_tts_prepare"
+name = "qwen3_tts_model_download"
 path = "src/main.rs"
 required-features = ["with-upstream"]
 

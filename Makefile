@@ -7,7 +7,7 @@ BACKEND ?= $(or $(QWEN3_TTS_BACKEND),vulkan)
 QUANT ?= $(or $(QWEN3_TTS_QUANT),q5_k_m)
 COMPOSE_CMD ?= docker compose
 CARGO ?= cargo
-PREPARE_MANIFEST := tools/qwen3-tts-prepare/Cargo.toml
+PREPARE_MANIFEST := tools/qwen3-tts-model-download/Cargo.toml
 
 COMPOSE_FILES_cpu := -f docker-compose.yml -f docker-compose.cpu.yml
 COMPOSE_FILES_vulkan := -f docker-compose.yml -f docker-compose.vulkan.yml

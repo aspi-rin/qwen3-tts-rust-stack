@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build/upstream
 COPY upstream/ /build/upstream/
-COPY tools/qwen3-tts-prepare/ /build/tools/qwen3-tts-prepare/
+COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 
 # Upstream pinned commit currently needs two local build patches:
 # - ort rc.12 SessionBuilder API needs mutable builders.
@@ -32,8 +32,8 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
     cargo build --release --features "${FEATURES}" --bin qwen3_tts_server \
  && cp target/release/qwen3_tts_server /tmp/qwen3_tts_server \
- && CARGO_TARGET_DIR=/build/upstream/target cargo build --release --features "${FEATURES}" --manifest-path /build/tools/qwen3-tts-prepare/Cargo.toml \
- && cp target/release/qwen3_tts_prepare /tmp/qwen3_tts_prepare
+ && CARGO_TARGET_DIR=/build/upstream/target cargo build --release --features "${FEATURES}" --manifest-path /build/tools/qwen3-tts-model-download/Cargo.toml \
+ && cp target/release/qwen3_tts_model_download /tmp/qwen3_tts_model_download
 
 FROM debian:bookworm-slim AS runtime-bundle
 
@@ -73,11 +73,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY --from=builder /tmp/qwen3_tts_server /app/qwen3_tts_server
-COPY --from=builder /tmp/qwen3_tts_prepare /app/qwen3_tts_prepare
+COPY --from=builder /tmp/qwen3_tts_model_download /app/qwen3_tts_model_download
 COPY --from=builder /build/upstream/speakers /app/speakers
 COPY --from=runtime-bundle /bundle/runtime /app/runtime
 
-RUN chmod +x /app/qwen3_tts_server /app/qwen3_tts_prepare \
+RUN chmod +x /app/qwen3_tts_server /app/qwen3_tts_model_download \
  && mkdir -p /app/models
 
 ENV QWEN3_TTS_BACKEND=${QWEN3_TTS_RUNTIME_BACKEND}

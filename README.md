@@ -29,7 +29,7 @@ BACKEND=vulkan make up   # Vulkan path; intended for AMD/Intel/NVIDIA Vulkan-cap
 BACKEND=cpu make up      # no GPU passthrough; uses llama.cpp/ggml CPU fallback
 ```
 
-The first startup runs the `qwen3-tts-init` prepare service to download Qwen3-TTS model files into `./models`, so it can take time depending on network speed.
+The first startup runs the `qwen3-tts-model-download` model download service to download Qwen3-TTS model files into `./models`, so it can take time depending on network speed.
 
 ## Configuration
 
@@ -44,7 +44,7 @@ Container-internal paths are fixed: models at `/app/models`, speakers at `/app/s
 
 ## Development
 
-The stack has a small local Rust wrapper for model preparation under `tools/qwen3-tts-prepare`.
+The stack has a small local Rust wrapper for model preparation under `tools/qwen3-tts-model-download`.
 
 ```bash
 make fmt-check
@@ -60,9 +60,9 @@ We do **not** use the official Qwen3-TTS-Rust release binary as the application 
 Instead, `docker/Dockerfile`:
 
 1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock);
-2. builds the local `qwen3_tts_prepare` wrapper, which only calls upstream model preparation logic;
+2. builds the local `qwen3_tts_model_download` wrapper, which only calls upstream model preparation logic;
 3. vendors the pinned Linux Vulkan runtime bundle documented in [`runtime.lock`](./runtime.lock) for llama.cpp/ONNX shared libraries;
-4. runs `qwen3-tts-init` before starting the long-running HTTP/WebSocket service.
+4. runs `qwen3-tts-model-download` before starting the long-running HTTP/WebSocket service.
 
 CPU mode currently reuses the same Linux Vulkan runtime bundle without `/dev/dri` passthrough and relies on llama.cpp/ggml CPU fallback.
 

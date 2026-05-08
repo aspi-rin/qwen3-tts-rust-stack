@@ -1,7 +1,7 @@
 services:
-  qwen3-tts-init:
+  qwen3-tts-model-download:
     image: qwen3-tts-rust-stack:v0.1.6-vulkan
-    entrypoint: /app/qwen3_tts_prepare
+    entrypoint: /app/qwen3_tts_model_download
     command:
       - --model-dir=/app/models
       - --quant=${QWEN3_TTS_QUANT:-q5_k_m}
@@ -17,7 +17,7 @@ services:
     container_name: qwen3-tts
     restart: unless-stopped
     depends_on:
-      qwen3-tts-init:
+      qwen3-tts-model-download:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:9746:3000"
