@@ -31,19 +31,19 @@ COMPOSE := $(COMPOSE_CMD) $(COMPOSE_FILES)
 check:
 	@$(COMPOSE_CMD) version >/dev/null 2>&1 || (echo "Compose command failed: $(COMPOSE_CMD). Install Docker Compose plugin or run with COMPOSE_CMD=docker-compose" >&2; exit 2)
 	@case "$(BACKEND)" in \
-		cpu) echo "Backend cpu: no GPU passthrough; using upstream Linux Vulkan binary with CPU fallback" ;; \
+		cpu) echo "Backend cpu: no GPU passthrough; using upstream Linux Vulkan runtime bundle with CPU fallback" ;; \
 		vulkan) test -e /dev/dri || (echo "Missing /dev/dri for Vulkan backend" >&2; exit 2); echo "Backend vulkan: /dev/dri found" ;; \
 	esac
 
 up: check
-	mkdir -p models outputs
+	mkdir -p models
 	docker build -f docker/Dockerfile \
 		--build-arg QWEN3_TTS_RUNTIME_BACKEND=$(BACKEND) \
 		-t $(IMAGE) .
-	$(COMPOSE) run --rm qwen3-tts
+	$(COMPOSE) up -d --force-recreate
 
 down:
 	$(COMPOSE) down
 
 clean:
-	rm -rf outputs
+	rm -rf models

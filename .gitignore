@@ -1,10 +1,7 @@
 /target/
 /upstream/
 /models/*
-/outputs/*
 !/models/.gitkeep
-*.wav
-*.pcm
 *.log
 
 __pycache__/

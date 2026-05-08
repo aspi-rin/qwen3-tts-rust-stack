@@ -5,9 +5,6 @@
 upstream
 target
 models
-outputs
-*.wav
-*.pcm
 *.log
 __pycache__
 *.pyc
