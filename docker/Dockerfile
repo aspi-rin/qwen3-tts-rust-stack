@@ -18,11 +18,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build/upstream
 COPY upstream/ /build/upstream/
 
-# Upstream pinned commit currently resolves ort rc.12, whose SessionBuilder API
-# needs mutable builders. Keep the patch local until upstream carries it or the
-# crate lockfile is pinned differently.
+# Upstream pinned commit currently needs two local build patches:
+# - ort rc.12 SessionBuilder API needs mutable builders.
+# - model download stores qwen3_assets.gguf under the selected quant folder,
+#   while engine loading still looked under gguf/. Keep these local until
+#   upstream carries fixes.
 RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
- && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs
+ && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
+ && sed -i 's/model_dir.join("gguf")/model_dir.join(quant_dir)/' src/tts/engine.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
