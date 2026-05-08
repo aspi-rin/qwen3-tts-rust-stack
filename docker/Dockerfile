@@ -29,6 +29,8 @@ COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 # - upstream verifies the Windows Vulkan backend filename on every platform;
 #   check the platform-correct shared object so container logs make Vulkan
 #   backend failures obvious.
+# - gate per-token sampler debug logs behind QWEN3_TTS_DEBUG_SAMPLING so
+#   normal service logs stay readable.
 RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
  && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
  && sed -i 's/use ort::execution_providers::DirectMLExecutionProvider;/#[cfg(windows)]\nuse ort::execution_providers::DirectMLExecutionProvider;/' src/models/onnx.rs \
@@ -42,7 +44,10 @@ RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = b
  && sed -i '/match libloading::Library::new(&vulkan_path)/,+3 c\            match libloading::Library::new(&vulkan_path) {\
                 Ok(_) => println!("  [System] Verified: {} is loadable.", vulkan_name),\
                 Err(e) => eprintln!("  [System] WARNING: {} is NOT loadable: {}. This usually means missing Vulkan drivers or runtime.", vulkan_name, e),\
-            }' src/models/llama/mod.rs
+            }' src/models/llama/mod.rs \
+ && perl -0pi -e 's@eprintln!\\(\\s*"\\[Debug\\] silent \\{\\} frames, penalty: \\{:\\.1\\}",\\s*consecutive_silent_frames, penalty\\s*\\);@if std::env::var_os("QWEN3_TTS_DEBUG_SAMPLING").is_some() { eprintln!("[Debug] silent {} frames, penalty: {:.1}", consecutive_silent_frames, penalty); }@s' src/tts/engine.rs \
+ && perl -0pi -e 's@eprintln!\\("\\[Debug\\] Sampled code_0=\\{\\}", code_0\\);@if std::env::var_os("QWEN3_TTS_DEBUG_SAMPLING").is_some() { eprintln!("[Debug] Sampled code_0={}", code_0); }@' src/tts/engine.rs \
+ && perl -0pi -e 's@eprintln!\\(\\s*"\\[Debug\\] silent frame \\{\\}, code_0=\\{\\}",\\s*consecutive_silent_frames, code_0\\s*\\);@if std::env::var_os("QWEN3_TTS_DEBUG_SAMPLING").is_some() { eprintln!("[Debug] silent frame {}, code_0={}", consecutive_silent_frames, code_0); }@s' src/tts/engine.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
