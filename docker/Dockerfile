@@ -21,12 +21,12 @@ COPY tools/qwen3-tts-prepare/ /build/tools/qwen3-tts-prepare/
 
 # Upstream pinned commit currently needs two local build patches:
 # - ort rc.12 SessionBuilder API needs mutable builders.
-# - model download stores qwen3_assets.gguf under the selected quant folder,
-#   while engine loading still looked under gguf/. Keep these local until
+# - quantized downloads put qwen3_assets.gguf under the quant folder, but
+#   assets are expected to remain F32 under gguf/. Keep these local until
 #   upstream carries fixes.
 RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
  && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
- && sed -i 's/model_dir.join("gguf")/model_dir.join(quant_dir)/' src/tts/engine.rs
+ && sed -i '/qwen3_assets.gguf/,+1 s@format!("{}/qwen3_assets.gguf", quant_folder)@"gguf/qwen3_assets.gguf".to_owned()@g' src/download.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
