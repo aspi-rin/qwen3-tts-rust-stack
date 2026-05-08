@@ -19,28 +19,13 @@ WORKDIR /build/upstream
 COPY upstream/ /build/upstream/
 COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
 
-# Upstream pinned commit currently needs two local build patches:
-# - ort rc.12 SessionBuilder API needs mutable builders.
-# - upstream leaves ort on a floating rc prerelease and enables CUDA/DirectML
-#   features unconditionally; pin rc.11 and keep only dynamic CPU ONNX loading.
-# - qwen3_assets.gguf layout is normalized by qwen3_tts_model_download rather
-#   than patching upstream download.rs.
-# - upstream verifies the Windows Vulkan backend filename on every platform;
-#   check the platform-correct shared object so container logs make Vulkan
-#   backend failures obvious.
-RUN sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
- && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs \
- && sed -i 's/use ort::execution_providers::DirectMLExecutionProvider;/#[cfg(windows)]\nuse ort::execution_providers::DirectMLExecutionProvider;/' src/models/onnx.rs \
- && sed -i 's/version = "2.0.0-rc.11"/version = "=2.0.0-rc.11"/' Cargo.toml \
- && sed -i 's/features = \["ndarray", "load-dynamic", "cuda", "directml"\]/features = ["ndarray", "load-dynamic"]/' Cargo.toml \
- && sed -i 's@let runtime_dir = PathBuf::from("runtime");@let runtime_dir = PathBuf::from(std::env::var("QWEN3_TTS_RUNTIME_DIR").unwrap_or_else(|_| "/app/runtime".to_string()));@' src/models/onnx.rs \
- && sed -i '/let env_builder =/i\    std::env::set_var("ORT_DYLIB_PATH", &dll_path);\n    println!("  [ONNX] ORT_DYLIB_PATH={}", dll_path.display());' src/models/onnx.rs \
- && sed -i 's@let vulkan_path = runtime_path.join("ggml-vulkan.dll");@let vulkan_name = if cfg!(target_os = "windows") { "ggml-vulkan.dll" } else if cfg!(target_os = "macos") { "libggml-metal.dylib" } else { "libggml-vulkan.so" };\
-            let vulkan_path = runtime_path.join(vulkan_name);@' src/models/llama/mod.rs \
- && sed -i '/match libloading::Library::new(&vulkan_path)/,+3 c\            match libloading::Library::new(&vulkan_path) {\
-                Ok(_) => println!("  [System] Verified: {} is loadable.", vulkan_name),\
-                Err(e) => eprintln!("  [System] WARNING: {} is NOT loadable: {}. This usually means missing Vulkan drivers or runtime.", vulkan_name, e),\
-            }' src/models/llama/mod.rs
+# Keep upstream source unmodified in the image build. The only dependency-level
+# constraint is a stack-local Cargo.lock pin for ort rc.11; without a lock,
+# Cargo may resolve to newer rc releases with incompatible SessionBuilder APIs.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo update -p ort --precise 2.0.0-rc.11 \
+ && cd /build/tools/qwen3-tts-model-download \
+ && cargo update -p ort --precise 2.0.0-rc.11
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
