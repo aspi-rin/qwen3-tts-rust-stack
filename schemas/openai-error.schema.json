@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-error.schema.json",
+  "title": "OpenAI-compatible error response",
+  "description": "OpenAI-style error response envelope used by the adapter for validation, unsupported feature, upstream, and internal errors.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["message", "type"],
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "examples": [
+            "invalid_request_error",
+            "unsupported_feature_error",
+            "upstream_error",
+            "server_error"
+          ]
+        },
+        "param": {
+          "type": ["string", "null"]
+        },
+        "code": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

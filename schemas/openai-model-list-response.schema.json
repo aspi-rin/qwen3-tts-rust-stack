@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-model-list-response.schema.json",
+  "title": "OpenAI-compatible list models response",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["object", "data"],
+  "properties": {
+    "object": {
+      "type": "string",
+      "const": "list"
+    },
+    "data": {
+      "type": "array",
+      "items": {
+        "$ref": "./openai-model-object.schema.json"
+      }
+    }
+  }
+}

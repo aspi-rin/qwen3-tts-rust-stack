@@ -59,7 +59,7 @@ independently.
 
 ## Pinned schema
 
-The OpenAI-compatible request schema is pinned in [`schemas/openai-audio-speech-request.schema.json`](../schemas/openai-audio-speech-request.schema.json) and summarized in [`openai-speech-schema.md`](./openai-speech-schema.md). Implementation should validate against this schema before applying runtime support checks.
+The OpenAI-compatible schemas are pinned under [`schemas/`](../schemas/) and summarized in [`openai-tts-contract.md`](./openai-tts-contract.md). Implementation should validate requests against these schemas before applying runtime support checks.
 
 ## Endpoints
 

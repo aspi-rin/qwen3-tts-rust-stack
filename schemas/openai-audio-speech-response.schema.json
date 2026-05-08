@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-audio-speech-response.schema.json",
+  "title": "OpenAI-compatible Create speech response",
+  "description": "Successful Create speech responses are binary audio, not JSON. This schema captures the response contract metadata that the adapter must satisfy.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "content_type", "streaming", "sample_rate_hz", "channels"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "audio"
+        },
+        "content_type": {
+          "type": "string",
+          "enum": [
+            "audio/mpeg",
+            "audio/opus",
+            "audio/aac",
+            "audio/flac",
+            "audio/wav",
+            "audio/pcm",
+            "application/octet-stream"
+          ]
+        },
+        "response_format": {
+          "type": "string",
+          "enum": ["mp3", "opus", "aac", "flac", "wav", "pcm"]
+        },
+        "stream_format": {
+          "type": "string",
+          "enum": ["audio"]
+        },
+        "streaming": {
+          "type": "boolean"
+        },
+        "sample_rate_hz": {
+          "type": "integer",
+          "const": 24000
+        },
+        "channels": {
+          "type": "integer",
+          "const": 1
+        },
+        "pcm_encoding": {
+          "type": "string",
+          "enum": ["s16le", "f32le"]
+        }
+      }
+    },
+    {
+      "$ref": "./openai-audio-speech-sse-event.schema.json"
+    }
+  ]
+}

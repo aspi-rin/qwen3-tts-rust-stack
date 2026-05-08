@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-audio-speech-sse-event.schema.json",
+  "title": "OpenAI-compatible Create speech SSE event",
+  "description": "SSE stream event envelope for Create speech when stream_format=sse. Event names and payload fields are pinned for adapter implementation; unsupported initially if not implemented.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "audio"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "speech.audio.delta"
+        },
+        "audio": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "description": "Base64-encoded audio bytes for this chunk."
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "speech.audio.done"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "error"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "error"
+        },
+        "error": {
+          "$ref": "./openai-error.schema.json#/properties/error"
+        }
+      }
+    }
+  ]
+}

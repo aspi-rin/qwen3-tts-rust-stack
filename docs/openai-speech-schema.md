@@ -70,3 +70,5 @@ keeping the broader OpenAI schema pinned above.
 - OpenAI API Reference: `Create speech` (`POST /v1/audio/speech`).
 - Pipecat `OpenAITTSService` documentation and source for the practical `pcm`
   streaming subset used by voice pipelines.
+
+See [`openai-tts-contract.md`](./openai-tts-contract.md) for all related request, response, error, SSE, and model-list schemas.
