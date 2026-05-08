@@ -103,6 +103,8 @@ type StreamChunk struct {
 	Text   string
 }
 
+const streamReadLimitBytes int64 = 8 * 1024 * 1024
+
 type Stream struct {
 	conn *websocket.Conn
 }
@@ -121,6 +123,10 @@ func (c *Client) OpenStream(ctx context.Context, req TTSRequest) (*Stream, error
 	if err != nil {
 		return nil, err
 	}
+	// Upstream audio chunks are binary f32le PCM. Chunks are often around
+	// 30 KiB and final chunks can exceed the websocket library default 32 KiB
+	// read limit, so set an explicit bounded audio-frame limit.
+	conn.SetReadLimit(streamReadLimitBytes)
 	if err := wsjson.Write(ctx, conn, req); err != nil {
 		_ = conn.Close(websocket.StatusInternalError, "write request failed")
 		return nil, err
