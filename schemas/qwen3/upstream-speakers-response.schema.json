@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/qwen3/upstream-speakers-response.schema.json",
+  "title": "Qwen3-TTS upstream /api/speakers response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["speakers"],
+  "properties": {
+    "speakers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

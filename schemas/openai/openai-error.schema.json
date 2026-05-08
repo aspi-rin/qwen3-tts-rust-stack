@@ -1,16 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-error.schema.json",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai/openai-error.schema.json",
   "title": "OpenAI-compatible error response",
   "description": "OpenAI-style error response envelope used by the adapter for validation, unsupported feature, upstream, and internal errors.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["error"],
+  "required": [
+    "error"
+  ],
   "properties": {
     "error": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["message", "type"],
+      "required": [
+        "message",
+        "type"
+      ],
       "properties": {
         "message": {
           "type": "string"
@@ -25,10 +30,16 @@
           ]
         },
         "param": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "code": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

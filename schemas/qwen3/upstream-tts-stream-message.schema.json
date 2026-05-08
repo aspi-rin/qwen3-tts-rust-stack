@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/qwen3/upstream-tts-stream-message.schema.json",
+  "title": "Qwen3-TTS upstream /api/tts/stream WebSocket client message",
+  "oneOf": [
+    {
+      "$ref": "./upstream-tts-request.schema.json"
+    },
+    {
+      "type": "string",
+      "const": "end",
+      "description": "End-of-stream marker sent by the client."
+    }
+  ]
+}

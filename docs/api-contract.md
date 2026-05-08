@@ -55,6 +55,8 @@ The current plan is documented in [`openai-adapter.md`](./openai-adapter.md).
 The compatibility layer should be implemented as a separate Go service in the
 stack, not as upstream `Qwen3-TTS-Rust` source changes.
 
-## Pinned schema
+## Pinned schemas
 
-The strict OpenAI-compatible request schema is pinned in [`../schemas/openai-audio-speech-request.schema.json`](../schemas/openai-audio-speech-request.schema.json) and documented in [`openai-speech-schema.md`](./openai-speech-schema.md).
+The strict OpenAI-compatible request schema is pinned in [`../schemas/openai/openai-audio-speech-request.schema.json`](../schemas/openai/openai-audio-speech-request.schema.json) and documented in [`openai-speech-schema.md`](./openai-speech-schema.md).
+
+The current upstream Qwen3 server contract is pinned under [`../schemas/qwen3/`](../schemas/qwen3/) and documented in [`qwen3-upstream-contract.md`](./qwen3-upstream-contract.md).

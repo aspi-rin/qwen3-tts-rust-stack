@@ -1,10 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-model-object.schema.json",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai/openai-model-object.schema.json",
   "title": "OpenAI-compatible model object",
   "type": "object",
   "additionalProperties": true,
-  "required": ["id", "object", "created", "owned_by"],
+  "required": [
+    "id",
+    "object",
+    "created",
+    "owned_by"
+  ],
   "properties": {
     "id": {
       "type": "string"

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai-audio-speech-request.schema.json",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/openai/openai-audio-speech-request.schema.json",
   "title": "OpenAI-compatible Create speech request",
   "description": "Request body schema for POST /v1/audio/speech, pinned from the OpenAI Create speech API shape for this stack's compatibility layer.",
   "type": "object",

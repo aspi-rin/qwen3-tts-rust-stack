@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/qwen3/upstream-tts-request.schema.json",
+  "title": "Qwen3-TTS upstream /api/tts request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text"],
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "speaker": {
+      "type": "string",
+      "minLength": 1,
+      "default": "vivian"
+    },
+    "temperature": {
+      "type": "number"
+    },
+    "top_k": {
+      "type": "integer"
+    },
+    "top_p": {
+      "type": "number"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "instruction": {
+      "type": "string"
+    },
+    "max_steps": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

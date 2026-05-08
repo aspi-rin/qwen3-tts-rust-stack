@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/qwen3/model-download-request.schema.json",
+  "title": "qwen3_tts_model_download CLI arguments",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["model_dir", "quant"],
+  "properties": {
+    "model_dir": {
+      "type": "string",
+      "minLength": 1,
+      "default": "/app/models"
+    },
+    "quant": {
+      "type": "string",
+      "enum": ["none", "q5_k_m", "q8_0"],
+      "default": "q5_k_m"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/qwen3/upstream-tts-response.schema.json",
+  "title": "Qwen3-TTS upstream /api/tts response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["success"],
+  "properties": {
+    "success": {
+      "type": "boolean"
+    },
+    "message": {
+      "type": ["string", "null"]
+    },
+    "audio_base64": {
+      "type": ["string", "null"],
+      "contentEncoding": "base64",
+      "description": "Base64-encoded WAV bytes when success=true."
+    },
+    "sample_rate": {
+      "type": ["integer", "null"],
+      "description": "Sample rate in Hz, normally 24000."
+    },
+    "duration_ms": {
+      "type": ["number", "null"]
+    }
+  }
+}

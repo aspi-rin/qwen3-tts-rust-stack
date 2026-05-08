@@ -1,19 +1,24 @@
 # OpenAI-compatible TTS contract schemas
 
-This directory pins the OpenAI-compatible TTS contract that the stack adapter
+The `schemas/openai/` directory pins the OpenAI-compatible TTS contract that the stack adapter
 will implement. The schemas intentionally cover both OpenAI's request shape and
 the local adapter response/error behavior needed for stable clients.
 
 ## Schema files
 
+OpenAI-compatible schemas live under `schemas/openai/`. Qwen3 upstream schemas
+are documented separately in [`qwen3-upstream-contract.md`](./qwen3-upstream-contract.md)
+and live under `schemas/qwen3/`.
+
+
 | File | Purpose |
 | --- | --- |
-| [`openai-audio-speech-request.schema.json`](../schemas/openai-audio-speech-request.schema.json) | JSON request body for `POST /v1/audio/speech`. |
-| [`openai-audio-speech-response.schema.json`](../schemas/openai-audio-speech-response.schema.json) | Successful binary audio/SSE response metadata contract. |
-| [`openai-audio-speech-sse-event.schema.json`](../schemas/openai-audio-speech-sse-event.schema.json) | SSE event payloads for `stream_format=sse`. |
-| [`openai-error.schema.json`](../schemas/openai-error.schema.json) | OpenAI-style JSON error envelope. |
-| [`openai-model-object.schema.json`](../schemas/openai-model-object.schema.json) | Model object returned by `/v1/models`. |
-| [`openai-model-list-response.schema.json`](../schemas/openai-model-list-response.schema.json) | `/v1/models` response. |
+| [`openai-audio-speech-request.schema.json`](../schemas/openai/openai-audio-speech-request.schema.json) | JSON request body for `POST /v1/audio/speech`. |
+| [`openai-audio-speech-response.schema.json`](../schemas/openai/openai-audio-speech-response.schema.json) | Successful binary audio/SSE response metadata contract. |
+| [`openai-audio-speech-sse-event.schema.json`](../schemas/openai/openai-audio-speech-sse-event.schema.json) | SSE event payloads for `stream_format=sse`. |
+| [`openai-error.schema.json`](../schemas/openai/openai-error.schema.json) | OpenAI-style JSON error envelope. |
+| [`openai-model-object.schema.json`](../schemas/openai/openai-model-object.schema.json) | Model object returned by `/v1/models`. |
+| [`openai-model-list-response.schema.json`](../schemas/openai/openai-model-list-response.schema.json) | `/v1/models` response. |
 
 ## Endpoints covered
 

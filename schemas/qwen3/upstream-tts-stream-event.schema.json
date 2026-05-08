@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vex9z7/qwen3-tts-rust-stack/schemas/qwen3/upstream-tts-stream-event.schema.json",
+  "title": "Qwen3-TTS upstream /api/tts/stream WebSocket server event",
+  "description": "Upstream WebSocket events are either text control messages or binary f32le PCM chunks. Binary payloads cannot be directly JSON-schema validated, so this schema pins their metadata contract.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "message"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "text"
+        },
+        "message": {
+          "type": "string",
+          "enum": ["segment_done", "done"]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "encoding", "sample_rate_hz", "channels"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "binary"
+        },
+        "encoding": {
+          "type": "string",
+          "const": "f32le"
+        },
+        "sample_rate_hz": {
+          "type": "integer",
+          "const": 24000
+        },
+        "channels": {
+          "type": "integer",
+          "const": 1
+        }
+      }
+    }
+  ]
+}

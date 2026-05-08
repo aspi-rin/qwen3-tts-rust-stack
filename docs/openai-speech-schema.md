@@ -3,7 +3,7 @@
 This stack pins the request shape for the OpenAI-compatible adapter in:
 
 ```text
-schemas/openai-audio-speech-request.schema.json
+schemas/openai/openai-audio-speech-request.schema.json
 ```
 
 Source baseline: OpenAI `POST /v1/audio/speech` / Create speech request body,
