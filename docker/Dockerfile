@@ -20,7 +20,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build
 RUN git clone "${UPSTREAM_REPO}" upstream \
  && cd upstream \
- && git checkout --detach "${UPSTREAM_REF}"
+ && git checkout --detach "${UPSTREAM_REF}" \
+ && sed -i 's/let builder = builder.with_execution_providers/let mut builder = builder.with_execution_providers/' src/models/onnx.rs \
+ && sed -i 's/Ok(builder) => {/Ok(mut builder) => {/' src/models/onnx.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/upstream/target \
