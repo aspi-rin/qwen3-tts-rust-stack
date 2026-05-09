@@ -100,7 +100,10 @@ mod tests {
 
         let changed = normalize_assets_layout(&root, "q5_k_m").unwrap();
         assert!(changed);
-        assert_eq!(fs::read(root.join("gguf/qwen3_assets.gguf")).unwrap(), b"assets");
+        assert_eq!(
+            fs::read(root.join("gguf/qwen3_assets.gguf")).unwrap(),
+            b"assets"
+        );
 
         let changed = normalize_assets_layout(&root, "q5_k_m").unwrap();
         assert!(!changed, "second run should be idempotent");
