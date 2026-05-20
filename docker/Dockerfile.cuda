@@ -26,14 +26,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build/upstream
 COPY upstream/ /build/upstream/
 COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
+COPY docker/q8-assets.patch /tmp/q8-assets.patch
 COPY docker/cuda-onnx.patch /tmp/cuda-onnx.patch
 
-# Patch the upstream ONNX session builder to honor a CUDA execution provider on
-# Linux when the binary is compiled with `--features cuda`. Upstream currently
-# only exposes a DirectML (Windows) GPU path; on Linux it always commits a CPU
-# session, which becomes the dominant bottleneck once llama is on the GPU.
+# Apply stack-local compatibility patches to the copied upstream tree. Q8_0
+# handles the current HuggingFace assets format; CUDA ONNX enables a Linux CUDA
+# execution provider when the binary is compiled with `--features cuda`.
 RUN apt-get update && apt-get install -y --no-install-recommends patch \
  && rm -rf /var/lib/apt/lists/* \
+ && patch -p1 -d /build/upstream < /tmp/q8-assets.patch \
  && patch -p1 -d /build/upstream < /tmp/cuda-onnx.patch
 
 # Mirror docker/Dockerfile: pin ort 2.0.0-rc.11 so cargo doesn't drift onto

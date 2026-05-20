@@ -72,9 +72,9 @@ We do **not** use the official Qwen3-TTS-Rust release binary as the application 
 
 Instead, `docker/Dockerfile`:
 
-1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock);
+1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock), with stack-local compatibility patches applied only to the Docker build copy;
 2. builds the local `qwen3_tts_model_download` wrapper, which calls upstream model preparation logic and normalizes the `qwen3_assets.gguf` layout without patching upstream source;
-3. pins the upstream build dependency resolver to `ort` rc.11 via a build-local `Cargo.lock`, leaving upstream source files unmodified;
+3. pins the upstream build dependency resolver to `ort` rc.11 via a build-local `Cargo.lock`, leaving the checked-out submodule files unmodified;
 4. vendors the pinned Linux Vulkan runtime bundle documented in [`runtime.lock`](./runtime.lock) for llama.cpp/ONNX shared libraries;
 5. runs `qwen3-tts-model-download` before starting the long-running `qwen3-tts-server` HTTP/WebSocket service.
 

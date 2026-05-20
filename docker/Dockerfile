@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     cmake \
     libasound2-dev \
+    patch \
     libssl-dev \
     pkg-config \
  && rm -rf /var/lib/apt/lists/*
@@ -18,12 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build/upstream
 COPY upstream/ /build/upstream/
 COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
+COPY docker/q8-assets.patch /tmp/q8-assets.patch
 
-# Keep upstream source unmodified in the image build. The only dependency-level
-# constraint is a stack-local Cargo.lock pin for ort rc.11; without a lock,
-# Cargo may resolve to newer rc releases with incompatible SessionBuilder APIs.
+# Keep the checked-out upstream submodule unmodified. The Docker build applies
+# stack-local compatibility patches to its copied source tree, then pins ort
+# rc.11 so Cargo does not resolve incompatible SessionBuilder APIs.
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo update -p ort --precise 2.0.0-rc.11 \
+    patch -p1 -d /build/upstream < /tmp/q8-assets.patch \
+ && cargo update -p ort --precise 2.0.0-rc.11 \
  && cd /build/tools/qwen3-tts-model-download \
  && cargo update -p ort --precise 2.0.0-rc.11
 
