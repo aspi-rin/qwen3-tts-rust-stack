@@ -12,13 +12,13 @@
  use ort::execution_providers::DirectMLExecutionProvider;
  use ort::session::builder::GraphOptimizationLevel;
  use ort::session::Session;
-@@ -28,6 +30,33 @@
+@@ -28,6 +30,24 @@
      Ok(session)
  }
 
-+/// Create CUDA Session on Linux. Falls back to CPU if the cuda provider can't
-+/// load (e.g. libonnxruntime_providers_cuda.so missing or no NVIDIA GPU
-+/// visible to the container).
++/// Create CUDA Session on Linux. CUDA backend is intentionally strict: if the
++/// CUDA provider cannot load or commit, startup fails instead of silently
++/// falling back to CPU.
 +#[cfg(all(feature = "cuda", target_os = "linux"))]
 +fn create_cuda_session(model_path: &str) -> Result<Session, Box<dyn Error>> {
 +    println!("  [ONNX] Requesting Execution Providers: CUDA");
@@ -26,27 +26,18 @@
 +    let builder = builder.with_optimization_level(GraphOptimizationLevel::Level3)?;
 +
 +    let cuda = CUDAExecutionProvider::default().build();
-+    match builder.with_execution_providers([cuda]) {
-+        Ok(builder) => {
-+            println!("  [ONNX] CUDA Provider configured.");
-+            let session = builder.commit_from_file(model_path)?;
-+            println!("  [ONNX] CUDA Session committed.");
-+            Ok(session)
-+        }
-+        Err(e) => {
-+            println!(
-+                "  [ONNX] CUDA Provider failed ({:?}); falling back to CPU.",
-+                e
-+            );
-+            create_cpu_session(model_path)
-+        }
-+    }
++    let builder = builder.with_execution_providers([cuda])?;
++    println!("  [ONNX] CUDA Provider configured.");
++
++    let session = builder.commit_from_file(model_path)?;
++    println!("  [ONNX] CUDA Session committed.");
++    Ok(session)
 +}
 +
  /// 创建 GPU Session (使用 DirectML)
  #[cfg(windows)]
  fn create_gpu_session(model_path: &str) -> Result<Session, Box<dyn Error>> {
-@@ -82,7 +111,10 @@
+@@ -82,7 +102,10 @@
          #[cfg(windows)]
          let session = create_gpu_session(model_path)?;
 
@@ -58,7 +49,7 @@
          let session = create_cpu_session(model_path)?;
 
          print_session_info(&session, "AudioEncoder");
-@@ -130,7 +162,10 @@
+@@ -130,7 +153,10 @@
          #[cfg(windows)]
          let session = create_gpu_session(model_path)?;
 
@@ -70,7 +61,7 @@
          let session = create_cpu_session(model_path)?;
 
          print_session_info(&session, "SpeakerEncoder");
-@@ -334,7 +369,10 @@
+@@ -334,7 +360,10 @@
          #[cfg(windows)]
          let session = create_gpu_session(model_path)?;
 

@@ -1,6 +1,6 @@
 --- a/src/assets_manager.rs
 +++ b/src/assets_manager.rs
-@@ -2,6 +2,36 @@
+@@ -2,6 +2,48 @@
  
  use std::io::{Read, Seek};
  
@@ -8,16 +8,28 @@
 +const QK8_0: usize = 32;
 +
 +fn f16_to_f32(h: u16) -> f32 {
-+    let s = (h >> 15) as u32;
-+    let e = ((h >> 10) & 0x1f) as i32;
-+    let m = (h & 0x3ff) as u32;
-+    match e {
-+        0 if m == 0 => f32::from_bits(s << 31),
-+        0 => f32::from_bits((s << 31) | ((127u32 - 14) << 23) | (m << 13)),
-+        31 if m == 0 => f32::from_bits((s << 31) | 0x7f80_0000),
-+        31 => f32::NAN,
-+        _ => f32::from_bits((s << 31) | ((e as u32 + 127 - 15) << 23) | (m << 13)),
-+    }
++    let sign = ((h & 0x8000) as u32) << 16;
++    let exp = ((h >> 10) & 0x1f) as i32;
++    let frac = (h & 0x03ff) as u32;
++
++    let bits = match exp {
++        0 if frac == 0 => sign,
++        0 => {
++            // Normalize half-precision subnormals before converting to f32.
++            let mut frac_norm = frac;
++            let mut exp_norm = -14i32;
++            while (frac_norm & 0x0400) == 0 {
++                frac_norm <<= 1;
++                exp_norm -= 1;
++            }
++            frac_norm &= 0x03ff;
++            sign | (((exp_norm + 127) as u32) << 23) | (frac_norm << 13)
++        }
++        0x1f => sign | 0x7f80_0000 | (frac << 13),
++        _ => sign | (((exp - 15 + 127) as u32) << 23) | (frac << 13),
++    };
++
++    f32::from_bits(bits)
 +}
 +
 +fn dequantize_q8_0(raw: &[u8], num_elems: usize) -> Vec<f32> {
@@ -37,7 +49,7 @@
  pub struct Assets {
      pub tts_pad: Vec<f32>,
      pub proj_weight: Vec<f32>,
-@@ -153,59 +183,52 @@ impl Assets {
+@@ -153,59 +195,52 @@ impl Assets {
              f.seek(std::io::SeekFrom::Start(data_start + info.offset))?;
  
              let num_elems: usize = info.shape.iter().product();
