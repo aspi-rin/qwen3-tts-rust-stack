@@ -1,0 +1,166 @@
+# Source-built Qwen3-TTS-Rust server image with NVIDIA CUDA acceleration.
+#
+# Why a separate Dockerfile (vs. shared with cpu/vulkan):
+#   - Runtime base has to be `nvidia/cuda:*` so libcudart / libcublas resolve
+#     against the NVIDIA Container Toolkit injection. The original
+#     `docker:trixie` base used by Dockerfile cannot host CUDA libs.
+#   - llama.cpp upstream does NOT publish a Linux CUDA tarball (only Vulkan,
+#     CPU, macOS, and Windows CUDA). The rust binary's auto-download path
+#     (upstream/src/download.rs) would 404 for `llama-b7885-bin-ubuntu-cuda-*`.
+#     We sidestep that by source-building CUDA libs at the pinned LLAMA_TAG and
+#     pre-placing them in /app/runtime/ so the binary skips its download step.
+FROM rust:1-bookworm AS builder
+
+ARG FEATURES=cuda
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    clang \
+    cmake \
+    libasound2-dev \
+    libssl-dev \
+    pkg-config \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build/upstream
+COPY upstream/ /build/upstream/
+COPY tools/qwen3-tts-model-download/ /build/tools/qwen3-tts-model-download/
+COPY docker/q8-assets.patch /tmp/q8-assets.patch
+COPY docker/cuda-onnx.patch /tmp/cuda-onnx.patch
+
+# Apply stack-local compatibility patches to the copied upstream tree. Q8_0
+# handles the current HuggingFace assets format; CUDA ONNX enables a Linux CUDA
+# execution provider when the binary is compiled with `--features cuda`.
+RUN apt-get update && apt-get install -y --no-install-recommends patch \
+ && rm -rf /var/lib/apt/lists/* \
+ && patch -p1 -d /build/upstream < /tmp/q8-assets.patch \
+ && patch -p1 -d /build/upstream < /tmp/cuda-onnx.patch
+
+# Mirror docker/Dockerfile: pin ort 2.0.0-rc.11 so cargo doesn't drift onto
+# newer rc releases with incompatible SessionBuilder APIs.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo update -p ort --precise 2.0.0-rc.11 \
+ && cd /build/tools/qwen3-tts-model-download \
+ && cargo update -p ort --precise 2.0.0-rc.11
+
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/build/upstream/target \
+    cargo build --release --features "${FEATURES}" --bin qwen3_tts_server \
+ && cp target/release/qwen3_tts_server /tmp/qwen3_tts_server \
+ && CARGO_TARGET_DIR=/build/upstream/target cargo build --release --features "${FEATURES}" --manifest-path /build/tools/qwen3-tts-model-download/Cargo.toml \
+ && cp target/release/qwen3_tts_model_download /tmp/qwen3_tts_model_download
+
+# Build llama.cpp with CUDA at the exact tag the upstream rust binary expects.
+# Why source-build instead of pulling `ghcr.io/ggml-org/llama.cpp:server-cuda`:
+#   - That tag tracks latest (b9246+ as of writing). Loading the model gguf
+#     packaged against b7885 with a newer libllama segfaults inside the talker
+#     graph at "Generation Step 1/4096" — internal layout drift.
+#   - llama.cpp's CUDA build is well-supported on nvidia/cuda devel images; the
+#     5-8 minute build cost is paid once per stack release.
+ARG LLAMA_TAG=b7885
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04 AS llama-cuda-libs
+
+ARG LLAMA_TAG
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    cmake \
+    curl \
+    git \
+    libcurl4-openssl-dev \
+    pkg-config \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /llama
+RUN git clone --depth 1 --branch "${LLAMA_TAG}" https://github.com/ggml-org/llama.cpp.git src \
+ && cmake -S src -B build \
+      -DGGML_CUDA=ON \
+      -DGGML_NATIVE=OFF \
+      -DBUILD_SHARED_LIBS=ON \
+      -DLLAMA_CURL=OFF \
+      -DLLAMA_BUILD_TESTS=OFF \
+      -DLLAMA_BUILD_EXAMPLES=OFF \
+      -DLLAMA_BUILD_TOOLS=OFF \
+      -DLLAMA_BUILD_SERVER=OFF \
+      -DCMAKE_BUILD_TYPE=Release \
+ && cmake --build build --config Release -j"$(nproc)" --target ggml llama \
+ && mkdir -p /out \
+ # Preserve symlinks (`libfoo.so` → `libfoo.so.0` → `libfoo.so.0.0.7885`) since
+ # the upstream rust loader resolves shared object dependencies through them.
+ && cp -a build/bin/libllama.so* /out/ \
+ && cp -a build/bin/libggml.so* /out/ \
+ && cp -a build/bin/libggml-base.so* /out/ \
+ && cp -a build/bin/libggml-cuda.so* /out/ \
+ && cp -a build/bin/libggml-cpu*.so* /out/ \
+ && ls -la /out/
+
+# Download ONNX Runtime GPU build so the cuda execution provider can be loaded
+# by the `ort` crate (which was compiled with `load-dynamic` + `cuda`).
+FROM debian:bookworm-slim AS onnx-bundle
+
+ARG ONNXRUNTIME_VERSION=1.23.2
+ARG ONNXRUNTIME_ASSET=onnxruntime-linux-x64-gpu-1.23.2.tgz
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    tar \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /onnx
+RUN set -eux; \
+    url="https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/${ONNXRUNTIME_ASSET}"; \
+    curl -L --fail --retry 3 --retry-delay 2 -o /tmp/onnx.tgz "$url"; \
+    tar -xzf /tmp/onnx.tgz -C /onnx --strip-components=1; \
+    rm /tmp/onnx.tgz; \
+    ls /onnx/lib/
+
+# Final runtime image. nvidia/cuda runtime base provides libcuda
+# (via NVIDIA Container Toolkit at run time) plus libcudart / libcublas /
+# libcublasLt / libcudnn baked into the image. Match CUDA 12.8 with the
+# llama-cuda-libs build stage above.
+FROM nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04 AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    libasound2t64 \
+    libgomp1 \
+    libssl3 \
+    libstdc++6 \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=builder /tmp/qwen3_tts_server /app/qwen3_tts_server
+COPY --from=builder /tmp/qwen3_tts_model_download /app/qwen3_tts_model_download
+COPY --from=builder /build/upstream/speakers /app/speakers
+
+# Place llama.cpp CUDA libs + onnxruntime GPU libs into /app/runtime so
+# upstream/src/download.rs sees libllama.so / libonnxruntime.so already
+# present and short-circuits its (broken-for-linux-cuda) download path.
+RUN mkdir -p /app/runtime
+COPY --from=llama-cuda-libs /out/ /app/runtime/
+COPY --from=onnx-bundle /onnx/lib/libonnxruntime.so /app/runtime/libonnxruntime.so
+COPY --from=onnx-bundle /onnx/lib/libonnxruntime_providers_cuda.so /app/runtime/
+COPY --from=onnx-bundle /onnx/lib/libonnxruntime_providers_shared.so /app/runtime/
+
+COPY docker/qwen3_tts_entrypoint.sh /app/qwen3_tts_entrypoint
+
+RUN chmod +x /app/qwen3_tts_server /app/qwen3_tts_model_download /app/qwen3_tts_entrypoint \
+ && mkdir -p /app/models
+
+ENV QWEN3_TTS_BACKEND=cuda
+ENV RUST_LOG=info
+# /app/runtime first so our pinned libs win over any host injection.
+# /usr/local/cuda/lib64 ensures libcudart resolves for the libggml-cuda.so plugin.
+ENV LD_LIBRARY_PATH=/app/runtime:/usr/local/cuda/lib64
+ENV QWEN3_TTS_RUNTIME_DIR=/app/runtime
+ENV ORT_DYLIB_PATH=/app/runtime/libonnxruntime.so
+ENV QWEN3_TTS_DEBUG_LOGS=0
+# Required by NVIDIA Container Toolkit so compute capability is granted.
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+EXPOSE 3000
+ENTRYPOINT ["/app/qwen3_tts_entrypoint"]
+CMD ["--host", "0.0.0.0", "--model-dir", "/app/models", "--quant", "q5_k_m", "--speakers-dir", "/app/speakers", "--threads", "4"]

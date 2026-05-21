@@ -28,6 +28,7 @@ Default `BACKEND=vulkan` passes `/dev/dri` into the container. Available backend
 
 ```bash
 BACKEND=vulkan make up   # Vulkan path; intended for AMD/Intel/NVIDIA Vulkan-capable hosts
+BACKEND=cuda make up     # NVIDIA CUDA path; requires NVIDIA driver + NVIDIA Container Toolkit
 BACKEND=cpu make up      # no GPU passthrough; uses llama.cpp/ggml CPU fallback
 ```
 
@@ -39,10 +40,11 @@ The first startup runs the `qwen3-tts-model-download` model download service to 
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `QWEN3_TTS_BACKEND` | `vulkan` | `vulkan` passes `/dev/dri`; `cpu` does not. |
+| `QWEN3_TTS_BACKEND` | `vulkan` | Runtime backend: `vulkan`, `cuda`, or `cpu`. |
 | `QWEN3_TTS_QUANT` | `q5_k_m` | Qwen3-TTS quantization helper: `none`, `q5_k_m`, or `q8_0`. |
 | `QWEN3_TTS_DEBUG_LOGS` | `0` | Set to `1`/`true`/`on` to keep verbose upstream debug logs; default filters noisy debug lines. |
 | `QWEN3_TTS_BIND_HOST` | `127.0.0.1` | Host interface for the public adapter port; set `0.0.0.0` to expose it to reverse proxies or the LAN. |
+| `QWEN3_TTS_GPU_DEVICE_ID` | `0` | Physical GPU selected by GPU-backed compose overrides. Used by `BACKEND=vulkan` and `BACKEND=cuda`. |
 
 Container-internal paths are fixed: models at `/app/models`, speakers at `/app/speakers`, runtime libs at `/app/runtime`.
 
@@ -72,13 +74,21 @@ We do **not** use the official Qwen3-TTS-Rust release binary as the application 
 
 Instead, `docker/Dockerfile`:
 
-1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock);
+1. builds `qwen3_tts_server` from the pinned upstream git submodule at `./upstream`, documented in [`upstream.lock`](./upstream.lock), with stack-local compatibility patches applied only to the Docker build copy;
 2. builds the local `qwen3_tts_model_download` wrapper, which calls upstream model preparation logic and normalizes the `qwen3_assets.gguf` layout without patching upstream source;
-3. pins the upstream build dependency resolver to `ort` rc.11 via a build-local `Cargo.lock`, leaving upstream source files unmodified;
+3. pins the upstream build dependency resolver to `ort` rc.11 via a build-local `Cargo.lock`, leaving the checked-out submodule files unmodified;
 4. vendors the pinned Linux Vulkan runtime bundle documented in [`runtime.lock`](./runtime.lock) for llama.cpp/ONNX shared libraries;
 5. runs `qwen3-tts-model-download` before starting the long-running `qwen3-tts-server` HTTP/WebSocket service.
 
 CPU mode currently reuses the same Linux Vulkan runtime bundle without `/dev/dri` passthrough and relies on llama.cpp/ggml CPU fallback.
+
+CUDA mode uses `docker/Dockerfile.cuda` instead of the shared CPU/Vulkan Dockerfile. It builds llama.cpp with CUDA at the pinned `LLAMA_TAG` and bundles ONNX Runtime GPU libraries so Linux NVIDIA deployments can use CUDA for both llama.cpp and ONNX sessions. The host must have a working NVIDIA driver and NVIDIA Container Toolkit; `make check BACKEND=cuda` validates `nvidia-smi` before building.
+
+To select a specific physical GPU for GPU-backed stacks, set `QWEN3_TTS_GPU_DEVICE_ID` in `.env` or inline:
+
+```bash
+QWEN3_TTS_GPU_DEVICE_ID=1 BACKEND=cuda make up
+```
 
 ## Basic checks
 

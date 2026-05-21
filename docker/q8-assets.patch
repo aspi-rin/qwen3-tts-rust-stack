@@ -1,0 +1,153 @@
+--- a/src/assets_manager.rs
++++ b/src/assets_manager.rs
+@@ -2,6 +2,48 @@
+ 
+ use std::io::{Read, Seek};
+ 
++// Q8_0: 32 int8 weights per block, prefixed by one f16 scale value.
++const QK8_0: usize = 32;
++
++fn f16_to_f32(h: u16) -> f32 {
++    let sign = ((h & 0x8000) as u32) << 16;
++    let exp = ((h >> 10) & 0x1f) as i32;
++    let frac = (h & 0x03ff) as u32;
++
++    let bits = match exp {
++        0 if frac == 0 => sign,
++        0 => {
++            // Normalize half-precision subnormals before converting to f32.
++            let mut frac_norm = frac;
++            let mut exp_norm = -14i32;
++            while (frac_norm & 0x0400) == 0 {
++                frac_norm <<= 1;
++                exp_norm -= 1;
++            }
++            frac_norm &= 0x03ff;
++            sign | (((exp_norm + 127) as u32) << 23) | (frac_norm << 13)
++        }
++        0x1f => sign | 0x7f80_0000 | (frac << 13),
++        _ => sign | (((exp - 15 + 127) as u32) << 23) | (frac << 13),
++    };
++
++    f32::from_bits(bits)
++}
++
++fn dequantize_q8_0(raw: &[u8], num_elems: usize) -> Vec<f32> {
++    let num_blocks = (num_elems + QK8_0 - 1) / QK8_0;
++    let mut out = Vec::with_capacity(num_elems);
++    for b in 0..num_blocks {
++        let base = b * (2 + QK8_0);
++        let scale = f16_to_f32(u16::from_le_bytes([raw[base], raw[base + 1]]));
++        let elems = QK8_0.min(num_elems - b * QK8_0);
++        for i in 0..elems {
++            out.push(raw[base + 2 + i] as i8 as f32 * scale);
++        }
++    }
++    out
++}
++
+ pub struct Assets {
+     pub tts_pad: Vec<f32>,
+     pub proj_weight: Vec<f32>,
+@@ -153,59 +195,52 @@ impl Assets {
+             f.seek(std::io::SeekFrom::Start(data_start + info.offset))?;
+ 
+             let num_elems: usize = info.shape.iter().product();
+-            println!(
+-                "    Debug: Reading tensor '{}' shape={:?}, elems={}, bytes={}",
+-                info.name,
+-                info.shape,
+-                num_elems,
+-                num_elems * 4
+-            );
+-            if info._type != 0 {
+-                return Err(
+-                    format!("Unsupported tensor type: {} (expected F32)", info._type).into(),
+-                );
+-            }
+ 
+-            if num_elems * 4 != info.shape.iter().product::<usize>() * 4 {
+-                // Paranoia check
+-            }
++            match info._type {
++                // F32: read raw bytes directly into a Vec<f32>.
++                0 => {
++                    let mut floats = Vec::new();
++                    if let Err(e) = floats.try_reserve_exact(num_elems) {
++                        return Err(format!(
++                            "Failed to reserve memory for tensor '{}' (f32): {}",
++                            info.name, e
++                        )
++                        .into());
++                    }
++                    floats.resize(num_elems, 0.0);
+ 
+-            // Allocate Vec<f32> directly
+-            let mut floats = Vec::new();
+-            if let Err(e) = floats.try_reserve_exact(num_elems) {
+-                return Err(format!(
+-                    "Failed to reserve memory for tensor '{}' (f32): {}",
+-                    info.name, e
++                    let byte_slice = unsafe {
++                        std::slice::from_raw_parts_mut(
++                            floats.as_mut_ptr() as *mut u8,
++                            num_elems * 4,
++                        )
++                    };
++                    let chunk_size = 100 * 1024 * 1024;
++                    let total_bytes = num_elems * 4;
++                    let mut current_read = 0;
++                    while current_read < total_bytes {
++                        let to_read = (total_bytes - current_read).min(chunk_size);
++                        f.read_exact(
++                            &mut byte_slice[current_read..current_read + to_read],
++                        )?;
++                        current_read += to_read;
++                    }
++                    Ok(floats)
++                }
++                // Q8_0: each block is [f16 scale | 32 x i8 weight].
++                8 => {
++                    let num_blocks = (num_elems + QK8_0 - 1) / QK8_0;
++                    let raw_bytes = num_blocks * (2 + QK8_0);
++                    let mut raw = vec![0u8; raw_bytes];
++                    f.read_exact(&mut raw)?;
++                    Ok(dequantize_q8_0(&raw, num_elems))
++                }
++                _ => Err(format!(
++                    "Unsupported tensor type: {} in tensor '{}'",
++                    info._type, info.name
+                 )
+-                .into());
+-            }
+-            floats.resize(num_elems, 0.0);
+-
+-            // Read directly into the f32 buffer as bytes
+-            // SAFETY: f32 and u8 have same layout size ratio (1:4).
+-            // We just treat the slice of f32s as a mutable slice of u8s.
+-            let byte_slice = unsafe {
+-                std::slice::from_raw_parts_mut(floats.as_mut_ptr() as *mut u8, num_elems * 4)
+-            };
+-
+-            // Read in chunks
+-            let chunk_size = 100 * 1024 * 1024;
+-            let total_bytes = num_elems * 4;
+-            let mut current_read = 0;
+-
+-            while current_read < total_bytes {
+-                let remaining = total_bytes - current_read;
+-                let to_read = remaining.min(chunk_size);
+-
+-                f.read_exact(&mut byte_slice[current_read..current_read + to_read])?;
+-                current_read += to_read;
++                .into()),
+             }
+-
+-            println!(
+-                "    Debug: Tensor '{}' read complete (optimized).",
+-                info.name
+-            );
+-            Ok(floats)
+         };
+ 
+         // Load specific tensors
