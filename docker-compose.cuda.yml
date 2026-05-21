@@ -1,0 +1,22 @@
+services:
+  qwen3-tts-model-download:
+    image: qwen3-tts-rust-stack:v0.1.6-cuda
+    environment:
+      QWEN3_TTS_BACKEND: cuda
+
+  qwen3-tts-server:
+    image: qwen3-tts-rust-stack:v0.1.6-cuda
+    environment:
+      QWEN3_TTS_BACKEND: cuda
+      # Pick which physical GPU the rust server uses. Override at deploy time
+      # (e.g. via .env's QWEN3_TTS_CUDA_DEVICE_ID) to share the box with other
+      # CUDA workloads. Inside the container it still appears as cuda:0.
+      NVIDIA_VISIBLE_DEVICES: "${QWEN3_TTS_CUDA_DEVICE_ID:-0}"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${QWEN3_TTS_CUDA_DEVICE_ID:-0}"]
+              capabilities: ["gpu"]
