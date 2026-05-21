@@ -2,5 +2,7 @@ services:
   qwen3-tts-server:
     environment:
       QWEN3_TTS_BACKEND: vulkan
+      # Restrict llama.cpp Vulkan to the selected physical GPU. Defaults to 0.
+      GGML_VK_VISIBLE_DEVICES: "${QWEN3_TTS_GPU_DEVICE_ID:-0}"
     devices:
       - /dev/dri:/dev/dri

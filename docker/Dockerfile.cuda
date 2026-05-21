@@ -7,9 +7,8 @@
 #   - llama.cpp upstream does NOT publish a Linux CUDA tarball (only Vulkan,
 #     CPU, macOS, and Windows CUDA). The rust binary's auto-download path
 #     (upstream/src/download.rs) would 404 for `llama-b7885-bin-ubuntu-cuda-*`.
-#     We sidestep that by pulling pre-built CUDA libs from the official
-#     `ghcr.io/ggml-org/llama.cpp:server-cuda` image and pre-placing them in
-#     /app/runtime/ so the binary skips its download step.
+#     We sidestep that by source-building CUDA libs at the pinned LLAMA_TAG and
+#     pre-placing them in /app/runtime/ so the binary skips its download step.
 FROM rust:1-bookworm AS builder
 
 ARG FEATURES=cuda
@@ -118,8 +117,8 @@ RUN set -eux; \
 
 # Final runtime image. nvidia/cuda runtime base provides libcuda
 # (via NVIDIA Container Toolkit at run time) plus libcudart / libcublas /
-# libcublasLt / libcudnn baked into the image. Match CUDA 12.8 since that's
-# what the llama.cpp:server-cuda image is built against.
+# libcublasLt / libcudnn baked into the image. Match CUDA 12.8 with the
+# llama-cuda-libs build stage above.
 FROM nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04 AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
